@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import { getHashParams } from './utils.js'
+import Mark from './components/icons/Mark.js'
+import Cross from './components/icons/Cross.js'
+import { useSwipeable } from 'react-swipeable'
 
 const { 
   REACT_APP_CLIENT_ID,
@@ -41,43 +44,75 @@ const getSavedTracks = (accessToken) => new Promise((resolve, reject) => {
 })
 
 const song = {
+  id: '9',
   name: 'Still Goin Down',
-  author: 'Morgan Wallen'
+  author: 'Morgan Wallen',
+  imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+  selected: false
 }
-const songs = [
-  song,
-  {
-    name: 'Snow',
-    author: 'Zach Bryan'
-  },
-  {
-    name: 'Traveling Man',
-    author: 'Zach Bryan'
-  },
-  {
-    name: 'Oklahoma City',
-    author: 'Zach Bryan'
-  }, 
-  {
-    name: 'Rap God',
-    author: 'Eminem'
-  },
-  {
-    name: 'Little Rain',
-    author: 'Morgan Wallen'
-  }
-]
 
 const Home = () => {
-  const [counter, setCounter] = useState(0)
   const [accessToken, setAccessToken] = useState(null)
   const [user, setUser] = useState({ name: 'Vitor' })
-  const [selectedSongs, setSelectedSongs] = useState(null)
+  const [songs, setSongs] = useState([
+    song,
+    {
+      id: '10',
+      name: 'Snow',
+      author: 'Zach Bryan',
+      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+      selected: false
+    },
+    {
+      id: '11',
+      name: 'Traveling Man',
+      author: 'Zach Bryan',
+      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+      selected: false
+    },
+    {
+      id: '12',
+      name: 'Oklahoma City',
+      author: 'Zach Bryan',
+      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+      selected: false
+    }, 
+    {
+      id: '13',
+      name: 'Rap God',
+      author: 'Eminem',
+      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+      selected: false
+    },
+    {
+      id: '14',
+      name: 'Little Rain',
+      author: 'Morgan Wallen',
+      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
+      selected: false
+    }
+  ])
+  const swipeBtns = useRef(null)
 
   const scopes = 'user-read-private, user-library-read'
 
+  const handlers = useSwipeable({
+    onSwiping: (swipeData) => {
+      const { target } = swipeData.event
+      const { deltaX, deltaY } = swipeData
+
+      target.style.transform = `
+        translate(${deltaX / 2}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
+        rotate(${deltaX / 5}deg)
+      `
+      swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true
+  })
+
   useEffect(() => {
-    document.body.classList.add('bg-black', 'text-white', 'antialiased')
+    document.body.classList.add('bg-purple', 'text-white', 'antialiased')
     document.documentElement.style.setProperty('--vh', `${window.innerHeight/100}px`);
 
     const hashParams = getHashParams()
@@ -113,17 +148,21 @@ const Home = () => {
     
     window.location = url
   }
+  
+  const handleSelectSong = (id) => {
+    setSongs(songs => songs.map(s => s.id === id ? { ...s, selected: !s.selected } : s))
+    console.log(songs)
+  }
 
   return (
     <div className='text-white'>
       <div className='min-h-screen'>
-        <div className='p-10'>
-          <div className='flex flex-col md:flex-row justify-between mb-5'>
+        <div className='p-8'>
+          <div className='flex flex-col md:flex-row justify-between'>
             <div className='flex flex-col font-bold'>
-              <h1 className='font-bold text-4xl md:text-6xl text-green-400 mb-2'>Spotiswipe</h1>
-              {!user && <p className='font-bold text-xl md:text-2xl text-green-200'>Tinder-like app to find recommended songs.</p>}
+              <h1 className='font-bold text-3xl text-gray-text mb-2'>Spotiswipe</h1>
+              {!user && <p className='font-bold text-xl md:text-2xl text-green-200'>Find amazing songs by swiping, just like Tinder.</p>}
             </div>
-            {user && <p className='font-bold mt-2 md:self-end text-white'>Hey {user.name}, you're in! Select a few songs to get started.</p>}
           </div>
           <div>
             {!user && 
@@ -134,24 +173,17 @@ const Home = () => {
             }
           </div>
         </div>
-        <div className='px-10 text-green-200'>
-          <ul>
-            {
-              songs.map(({ name, author }) => 
-              <li className='p-5 justify-start items-center bg-graygray rounded mb-2 flex flex-row cursor-pointer'>
-                <div className='w-6 h-6 bg-white rounded mr-5'>
-                </div>
-                <div className='flex flex-col'>
-                  <span className='font-bold'>{name}</span>
-                  <span>by {author}</span>
-                </div>
-              </li>
-            )}
-          </ul>
-          <button className='rounded p-2 bg-white font-bold'>Start swiping!</button>
+        <div className='px-8 text-green-200'>
+          <div className='bg-blue-500 w-full md:w-96 m-0 m-auto h-96 rounded-lg overflow-hidden' {...handlers}>
+            test
+          </div>
+          <div ref={swipeBtns} className='mt-5 w-28 h-12 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
+              <Cross className='w-5 h-5 object-contain' fill='red' width="16px"/>
+              <Mark className='w-5 h-5' fill='green' />
+            </div>
         </div>
       </div>
-      <footer className='p-10 bg-gray-800 h-72 w-full'>
+      <footer className='mt-10 p-10 bg-gray-800 h-72 w-full'>
         <div>
           <h2>Spotiswipe does not use your Spotify data in any harmful way. Spotiswipe is open-sourced and its source code can be viewed on Github.</h2>
         </div>

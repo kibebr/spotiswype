@@ -4,7 +4,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'graygray': '#0d0d0d'
+        'grayish': '#484848',
+        'grayzao': '#333333',
+        'graygray': '#0d0d0d',
+        'purple': '#010981',
+        'gray-text': '#7F84C1',
+        'purple-strong': '#184BFF'
       }
     },
   },
@@ -12,4 +17,5 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  important: true
 }
