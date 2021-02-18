@@ -3,13 +3,11 @@ import { map as amap, takeLeft } from 'fp-ts/Array'
 import { pipe, flow } from 'fp-ts/function'
 import { User } from './index'
 import { 
-  getProfile, 
   getSavedTracks, 
   getSeveralArtists,
   getRecommendedSongs
 } from './services/SpotifyAPI'
-import { getHashParams } from './utils'
-import { type, Errors, string, array, TypeOf } from 'io-ts'
+import { type, string, array, TypeOf } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
 
 const profileSpotifyResponse = type({
@@ -58,7 +56,6 @@ export const getRecommendations = ({ token }: User): TaskEither<unknown, any> =>
   chainEitherKW(({ favoriteTracks }) => getSavedTracksResponse.decode(favoriteTracks)),
   chain((savedTracks) => pipe(
     of(getRecommendedSongs),
-    ap(of(token)),
     ap(of(pipe(
       get5Items(savedTracks),
       amap(flow(prop('track'), prop('id')))
@@ -71,15 +68,16 @@ export const getRecommendations = ({ token }: User): TaskEither<unknown, any> =>
       get5Artists(savedTracks),
       amap(prop('id')),
       (ids) => tryCatch(
-        () => getSeveralArtists(token)(ids),
+        () => getSeveralArtists(ids)(token),
         (): unknown => 'Uh oh, there was a problem while fetching for the artists! Please contact the developer.'
       ),
       chainEitherKW(getSeveralArtistsResponseV.decode),
       temap(flow(prop('artists'), amap(a => a.genres[0])))
     )),
+    ap(of(token)),
     chain(promise => tryCatch(
       () => promise,
-      (err): unknown => 'Uh oh, there was a problem while fetching for the recommended songs! Please contact the developer.'
+      (): unknown => 'Uh oh, there was a problem while fetching for the recommended songs! Please contact the developer.'
     ))
   ))
 )
