@@ -1,6 +1,7 @@
 import { map as temap, of, ap, chain, chainEitherKW, chainW, apSW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/TaskEither'
 import { map as amap, filter, takeLeft } from 'fp-ts/Array'
-import { pipe, flow, not } from 'fp-ts/function'
+import { pipe, flow, not, Lazy } from 'fp-ts/function'
+import { toError } from 'fp-ts/Either'
 import { User, Song } from './index'
 import { 
   getSavedTracks, 
@@ -9,6 +10,8 @@ import {
 } from './services/SpotifyAPI'
 import { type, string, array, TypeOf, union, null as _null, Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
+
+const fromThunk = <A>(thunk: Lazy<Promise<A>>): TaskEither<Error, A> => tryCatch(thunk, toError)
 
 const getSeveralArtistsResponseV = type({
   artists: array(type({
@@ -56,22 +59,17 @@ const get5Artists: (savedTracks: SavedTracksResponse) => ArtistResponse[] = flow
   amap(item => item.track.artists[0])
 )
 
-const tryGetSavedTracks = (token: string): TaskEither<string | Errors, SavedTracksResponse> => pipe(
-  tryCatch(
-    () => getSavedTracks(token),
-    () => 'Uh oh, there was a problem while fetching for your favorite tracks! Please contact the developer.'
-  ),
+const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> => pipe(
+  fromThunk(() => getSavedTracks(token)),
   chainEitherKW(getSavedTracksResponse.decode)
 )
 
-const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<string | Errors, SeveralArtistsResponse> => pipe(
-  tryCatch(
-    () => getSeveralArtists(ids)(token),
-    () => 'Uh oh, there was a problem while fetching for the artist! Please contact the developer.'
-  ),
-  chainEitherKW(getSeveralArtistsResponseV.decode),
+const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> => pipe(
+  fromThunk(() => getSeveralArtists(ids)(token)),
+  chainEitherKW(getSeveralArtistsResponseV.decode)
 )
-export const getRecommendations = ({ token }: User): TaskEither<string | Errors, RecommendationsResponse> => pipe(
+
+export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
   Do,
   bind('savedTracks', () => tryGetSavedTracks(token)),
   chainW(({ savedTracks }) => pipe(
@@ -94,10 +92,7 @@ export const getRecommendations = ({ token }: User): TaskEither<string | Errors,
       ))
     )),
     ap(of<any, string>(token)),
-    chain(promise => tryCatch(
-      () => promise,
-      (): string => 'Uh oh, there was a problem while fetching for the recommended songs! Please contact the developer.'
-    ))
+    chain(promise => fromThunk(() => promise))
   )),
   chainEitherKW(getRecommendationsResponse.decode)
 )
