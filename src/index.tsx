@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Transition } from '@headlessui/react'
 import ReactDOM from 'react-dom';
-import { fold } from 'fp-ts/TaskEither'
+import { getOrElse } from 'fp-ts/TaskEither'
 import './index.css';
 import { getHashParams } from './utils'
 import Mark from './components/icons/Mark'
@@ -17,7 +17,8 @@ const {
 
 export type Song = {
   name: string
-  previewUrl: string
+  previewUrl: string,
+  imageUrl: string
 }
 
 export type User = {
@@ -27,7 +28,7 @@ export type User = {
 
 const Home = () => {
   const [user, setUser] = useState()
-  const [error, setError] = useState('')
+  const [error, setError] = useState('This app is a work-in-progress! Contribute at Github.')
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
@@ -79,9 +80,8 @@ const Home = () => {
       }
       
       getSongs(user)()
-      .then(tracks => {
-        console.log(tracks)
-      })
+      .then(data => console.log(data))
+
     }
   }, [])
 
