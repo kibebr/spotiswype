@@ -96,14 +96,30 @@ const Home = () => {
 
   const scopes = 'user-read-private, user-library-read'
 
+  const getX = (str) => {
+    var n = str.indexOf("(");
+    var n1 = str.indexOf(",");
+
+    return parseInt(str.slice(n+1,n1-2));
+  }
+
   const handlers = useSwipeable({
+    onSwiped: (swipeData) => {
+      const { target } = swipeData.event
+
+      target.style.transform = 'translate(0px, 0px) rotate(0deg)'
+      swipeBtns.current.style.transform = 'translate(0px, 0px) rotate(0deg)'
+    },
     onSwiping: (swipeData) => {
       const { target } = swipeData.event
       const { deltaX, deltaY } = swipeData
 
+      const transX = getX(target.style.transform)
+      console.log(getX(target.style.transform))
+
       target.style.transform = `
-        translate(${deltaX / 2}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
-        rotate(${deltaX / 5}deg)
+        translate(${transX < 20 && transX > -20 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
+        rotate(${deltaX / 5 | 0}deg)
       `
       swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
     },
@@ -178,8 +194,12 @@ const Home = () => {
             test
           </div>
           <div ref={swipeBtns} className='mt-5 w-28 h-12 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
-              <Cross className='w-5 h-5 object-contain' fill='red' width="16px"/>
-              <Mark className='w-5 h-5' fill='green' />
+            <div className='text-red-500 hover:bg-red-500 hover:text-white rounded p-1'>
+                <Cross className='w-5 h-5 fill-current' width="16px"/>
+              </div>
+            <div className='text-green-500 hover:bg-green-500 hover:text-white rounded p-1'>
+                <Mark className='w-5 h-5 fill-current' />
+              </div>
             </div>
         </div>
       </div>
