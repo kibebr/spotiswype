@@ -6,8 +6,8 @@ import Mark from './components/icons/Mark'
 import Cross from './components/icons/Cross'
 import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
-import { getUserData } from './spotifyapi'
 import { TaskEither } from 'fp-ts/TaskEither'
+import { getRecommendations } from './spotifyapi'
 
 const { 
   REACT_APP_CLIENT_ID,
@@ -28,7 +28,7 @@ export type Song = {
 }
 
 export type User = {
-  name: string,
+  token: string,
   savedSongs: Song[]
 }
 
@@ -41,7 +41,7 @@ const song: Song = {
 }
 
 const Home = () => {
-  const [user, setUser] = useState({})
+  const [user, setUser] = useState()
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
@@ -86,8 +86,19 @@ const Home = () => {
 
     const hashParams = getHashParams()
 
-    if (hashParams.access_token)
-    const userData = getUserData(access_token)
+    if (hashParams.access_token) {
+      const user: User = {
+        token: hashParams.access_token,
+        savedSongs: []
+      }
+      
+      getRecommendations(user)()
+        .then(tracks => {
+          console.log(tracks)
+        })
+        .catch(err => console.error(err))
+    }
+    /* const userData = getUserData(access_token) */
     // try to get info
 
     /* if (hashParams.access_token) { */
@@ -110,7 +121,6 @@ const Home = () => {
   }, [])
 
   const handleLogin = () => {
-    const userData = getUserData()
     let url = 'https://accounts.spotify.com/authorize'
 
     url += '?response_type=token';
