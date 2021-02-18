@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { getHashParams } from './utils.js'
-import Mark from './components/icons/Mark.js'
-import Cross from './components/icons/Cross.js'
+import { getHashParams } from './utils'
+import Mark from './components/icons/Mark'
+import Cross from './components/icons/Cross'
+import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
 import { getProfile, getSavedTracks } from './services/SpotifyAPI'
 
@@ -29,7 +30,6 @@ const song: Song = {
 }
 
 const Home = () => {
-  const [accessToken, setAccessToken] = useState(null)
   const [user, setUser] = useState({ name: 'Vitor' })
   const [songs, setSongs] = useState([
     song,
@@ -69,11 +69,12 @@ const Home = () => {
       selected: false
     }
   ])
-  const swipeBtns = useRef(null)
+  const swipeBtns = useRef<HTMLDivElement>(null)
+
 
   const scopes = 'user-read-private, user-library-read'
 
-  const getX = (str: string) => {
+  const getX = (str: string): number => {
     var n = str.indexOf("(");
     var n1 = str.indexOf(",");
 
@@ -82,25 +83,29 @@ const Home = () => {
 
   const handlers = useSwipeable({
     onSwiped: (swipeData) => {
-      const { target } = swipeData.event
+      const target = swipeData.event.currentTarget as HTMLElement
 
       target.style.transform = 'translate(0px, 0px) rotate(0deg)'
-      if (swipeBtns) {
+      if (swipeBtns.current) {
         swipeBtns.current.style.transform = 'translate(0px, 0px) rotate(0deg)'
       }
     },
     onSwiping: (swipeData) => {
-      const { target } = swipeData.event
+      const target = swipeData.event.currentTarget as HTMLElement
       const { deltaX, deltaY } = swipeData
+      
+      if (swipeData.event.currentTarget && swipeBtns) {
+        const transX = getX(target.style.transform)
+        console.log(getX(target.style.transform))
 
-      const transX = getX(target.style.transform)
-      console.log(getX(target.style.transform))
-
-      target.style.transform = `
+        target.style.transform = `
         translate(${transX < 20 && transX > -20 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
         rotate(${deltaX / 5 | 0}deg)
-      `
-      swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
+        `
+        if (swipeBtns.current) {
+          swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
+        }
+      }
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
@@ -108,7 +113,6 @@ const Home = () => {
 
   useEffect(() => {
     document.body.classList.add('bg-purple', 'text-white', 'antialiased')
-    document.documentElement.style.setProperty('--vh', `${window.innerHeight/100}px`);
 
     const hashParams = getHashParams()
 
@@ -135,18 +139,13 @@ const Home = () => {
     let url = 'https://accounts.spotify.com/authorize'
 
     url += '?response_type=token';
-    url += '&client_id=' + encodeURIComponent(REACT_APP_CLIENT_ID)
+    url += '&client_id=' + encodeURIComponent(REACT_APP_CLIENT_ID as string)
     url += '&scope=' + encodeURIComponent(scopes)
-    url += '&redirect_uri=' + encodeURIComponent(REACT_APP_REDIRECT_URI)
+    url += '&redirect_uri=' + encodeURIComponent(REACT_APP_REDIRECT_URI as string)
     
     window.location.href = url
   }
   
-  const handleSelectSong = (id: string) => {
-    setSongs(songs => songs.map(s => s.id === id ? { ...s, selected: !s.selected } : s))
-    console.log(songs)
-  }
-
   return (
     <div className='text-white'>
       <div className='min-h-screen'>
@@ -160,7 +159,7 @@ const Home = () => {
           <div>
             {!user && 
             <button onClick={handleLogin} className='rounded flex flex-row items-center bg-green-500 p-2'>
-              <img src='/spotify.svg' width={16} height={16} className='mr-2'/>
+              <img src='/spotify.svg' width={16} height={16} className='mr-2' alt='Spotify logo' />
               <span className='font-bold text-black'>Log-in with Spotify</span>
             </button>
             }
@@ -180,11 +179,7 @@ const Home = () => {
             </div>
         </div>
       </div>
-      <footer className='mt-10 p-10 bg-gray-800 h-72 w-full'>
-        <div>
-          <h2>Spotiswipe does not use your Spotify data in any harmful way. Spotiswipe is open-sourced and its source code can be viewed on Github.</h2>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
