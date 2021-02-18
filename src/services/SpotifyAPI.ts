@@ -37,9 +37,5 @@ export const getSeveralArtists = (artistsIds: string[]) => newSpotifyRequest({
 export const getRecommendedSongs = (seedTracks: string[]) => (seedArtists: string[]) => (seedGenres: string[]) => newSpotifyRequest({
   type: 'GET',
   url: `
-    https://api.spotify.com/v1/recommendations?
-      seed_tracks=${seedTracks.join()}&
-      seed_artists=${seedArtists.join()}&
-      seedGenres=${seedGenres.join().replace(' ', '+')}
-    `
+    https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
 })
