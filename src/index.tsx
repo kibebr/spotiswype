@@ -6,9 +6,20 @@ import Mark from './components/icons/Mark'
 import Cross from './components/icons/Cross'
 import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
-import { getProfile, getSavedTracks } from './services/SpotifyAPI'
+import { getUserData } from './spotifyapi'
+import { TaskEither } from 'fp-ts/TaskEither'
 
-type Song = {
+const { 
+  REACT_APP_CLIENT_ID,
+  REACT_APP_REDIRECT_URI
+} = process.env
+
+export interface Api {
+  getUser(): TaskEither<any, User>,
+  getRecommendedSongs(): TaskEither<any, Song[]>
+}
+
+export type Song = {
   id: string,
   name: string,
   author: string,
@@ -16,10 +27,10 @@ type Song = {
   selected: boolean
 }
 
-const { 
-  REACT_APP_CLIENT_ID,
-  REACT_APP_REDIRECT_URI
-} = process.env
+export type User = {
+  name: string,
+  savedSongs: Song[]
+}
 
 const song: Song = {
   id: '9',
@@ -30,47 +41,9 @@ const song: Song = {
 }
 
 const Home = () => {
-  const [user, setUser] = useState({ name: 'Vitor' })
-  const [songs, setSongs] = useState([
-    song,
-    {
-      id: '10',
-      name: 'Snow',
-      author: 'Zach Bryan',
-      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-      selected: false
-    },
-    {
-      id: '11',
-      name: 'Traveling Man',
-      author: 'Zach Bryan',
-      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-      selected: false
-    },
-    {
-      id: '12',
-      name: 'Oklahoma City',
-      author: 'Zach Bryan',
-      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-      selected: false
-    }, 
-    {
-      id: '13',
-      name: 'Rap God',
-      author: 'Eminem',
-      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-      selected: false
-    },
-    {
-      id: '14',
-      name: 'Little Rain',
-      author: 'Morgan Wallen',
-      imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-      selected: false
-    }
-  ])
-  const swipeBtns = useRef<HTMLDivElement>(null)
+  const [user, setUser] = useState({})
 
+  const swipeBtns = useRef<HTMLDivElement>(null)
 
   const scopes = 'user-read-private, user-library-read'
 
@@ -94,17 +67,14 @@ const Home = () => {
       const target = swipeData.event.currentTarget as HTMLElement
       const { deltaX, deltaY } = swipeData
       
-      if (swipeData.event.currentTarget && swipeBtns) {
-        const transX = getX(target.style.transform)
-        console.log(getX(target.style.transform))
+      const transX = getX(target.style.transform)
 
-        target.style.transform = `
-        translate(${transX < 20 && transX > -20 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
-        rotate(${deltaX / 5 | 0}deg)
-        `
-        if (swipeBtns.current) {
-          swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
-        }
+      target.style.transform = `
+        translate(${deltaX < 100 && deltaX > -100 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
+        rotate(${deltaX / 10 | 0}deg)
+      `
+      if (swipeBtns.current) {
+        swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
       }
     },
     preventDefaultTouchmoveEvent: true,
@@ -116,26 +86,31 @@ const Home = () => {
 
     const hashParams = getHashParams()
 
-    if (hashParams.access_token) {
-      getProfile(hashParams.access_token)
-        .then(data => {
-          setUser({
-            name: data.display_name
-          })
-        })
-        .catch(err => console.error(err))
+    if (hashParams.access_token)
+    const userData = getUserData(access_token)
+    // try to get info
 
-      getSavedTracks(hashParams.access_token)
-        .then(tracks => {
-          console.log(tracks)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    }
+    /* if (hashParams.access_token) { */
+    /*   getProfile(hashParams.access_token) */
+    /*     .then(data => { */
+    /*       setUser({ */
+    /*         name: data.display_name */
+    /*       }) */
+    /*     }) */
+    /*     .catch(err => console.error(err)) */
+
+    /*   getSavedTracks(hashParams.access_token) */
+    /*     .then(tracks => { */
+    /*       console.log(tracks) */
+    /*     }) */
+    /*     .catch(err => { */
+    /*       console.error(err) */
+    /*     }) */
+    /* } */
   }, [])
 
   const handleLogin = () => {
+    const userData = getUserData()
     let url = 'https://accounts.spotify.com/authorize'
 
     url += '?response_type=token';
@@ -153,31 +128,33 @@ const Home = () => {
           <div className='flex flex-col md:flex-row justify-between'>
             <div className='flex flex-col font-bold'>
               <h1 className='font-bold text-3xl text-gray-text mb-2'>Spotiswipe</h1>
-              {!user && <p className='font-bold text-xl md:text-2xl text-green-200'>Find amazing songs by swiping, just like Tinder.</p>}
+              {!user && <p className='font-bold text-xl md:text-2xl text-gray-text'>Find amazing songs by swiping, just like Tinder.</p>}
             </div>
           </div>
           <div>
             {!user && 
-            <button onClick={handleLogin} className='rounded flex flex-row items-center bg-green-500 p-2'>
+            <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-green-500 p-2'>
               <img src='/spotify.svg' width={16} height={16} className='mr-2' alt='Spotify logo' />
-              <span className='font-bold text-black'>Log-in with Spotify</span>
+              <span className='font-bold text-purple'>Log-in with Spotify</span>
             </button>
             }
           </div>
         </div>
-        <div className='px-8 text-green-200'>
+
+        {user && <div className='px-8 text-green-200'>
           <div className='bg-blue-500 w-full md:w-96 m-0 m-auto h-96 rounded-lg overflow-hidden' {...handlers}>
             test
           </div>
-          <div ref={swipeBtns} className='mt-5 w-28 h-12 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
-            <div className='text-red-500 hover:bg-red-500 hover:text-white rounded p-1'>
-                <Cross className='w-5 h-5 fill-current' width="16px"/>
+          <div ref={swipeBtns} className='mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
+            <div className='text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
+                <Cross className='w-5 h-5 fill-current' />
               </div>
-            <div className='text-green-500 hover:bg-green-500 hover:text-white rounded p-1'>
+            <div className='text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
                 <Mark className='w-5 h-5 fill-current' />
               </div>
             </div>
-        </div>
+        </div>}
+
       </div>
       <Footer />
     </div>

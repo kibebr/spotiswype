@@ -1,4 +1,4 @@
-export const getProfile = (accessToken: string) => new Promise((resolve, reject) => {
+export const getProfile = (accessToken: string) => new Promise<unknown>((resolve, reject) => {
   const request = new XMLHttpRequest()
   request.open('GET', 'https://api.spotify.com/v1/me')
   request.setRequestHeader('Authorization', `Bearer ${accessToken}`)
