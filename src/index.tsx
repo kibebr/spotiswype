@@ -1,30 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Transition } from '@headlessui/react'
 import ReactDOM from 'react-dom';
+import { fold } from 'fp-ts/TaskEither'
 import './index.css';
 import { getHashParams } from './utils'
 import Mark from './components/icons/Mark'
 import Cross from './components/icons/Cross'
 import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
-import { TaskEither } from 'fp-ts/TaskEither'
-import { getRecommendations } from './spotifyapi'
+import { getSongs } from './spotifyapi'
 
 const { 
   REACT_APP_CLIENT_ID,
   REACT_APP_REDIRECT_URI
 } = process.env
 
-export interface Api {
-  getUser(): TaskEither<any, User>,
-  getRecommendedSongs(): TaskEither<any, Song[]>
-}
-
 export type Song = {
-  id: string,
-  name: string,
-  author: string,
-  imgUrl: string,
-  selected: boolean
+  name: string
+  previewUrl: string
 }
 
 export type User = {
@@ -32,16 +25,9 @@ export type User = {
   savedSongs: Song[]
 }
 
-const song: Song = {
-  id: '9',
-  name: 'Still Goin Down',
-  author: 'Morgan Wallen',
-  imgUrl: 'https://i.scdn.co/image/ab67616d00001e028186bf9413a587a7061b9755',
-  selected: false
-}
-
 const Home = () => {
   const [user, setUser] = useState()
+  const [error, setError] = useState('')
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
@@ -92,32 +78,11 @@ const Home = () => {
         savedSongs: []
       }
       
-      getRecommendations(user)()
-        .then(tracks => {
-          console.log(tracks)
-        })
-        .catch(err => console.error(err))
+      getSongs(user)()
+      .then(tracks => {
+        console.log(tracks)
+      })
     }
-    /* const userData = getUserData(access_token) */
-    // try to get info
-
-    /* if (hashParams.access_token) { */
-    /*   getProfile(hashParams.access_token) */
-    /*     .then(data => { */
-    /*       setUser({ */
-    /*         name: data.display_name */
-    /*       }) */
-    /*     }) */
-    /*     .catch(err => console.error(err)) */
-
-    /*   getSavedTracks(hashParams.access_token) */
-    /*     .then(tracks => { */
-    /*       console.log(tracks) */
-    /*     }) */
-    /*     .catch(err => { */
-    /*       console.error(err) */
-    /*     }) */
-    /* } */
   }, [])
 
   const handleLogin = () => {
@@ -151,20 +116,26 @@ const Home = () => {
           </div>
         </div>
 
-        {user && <div className='px-8 text-green-200'>
+        {<div className='px-8 text-green-200'>
           <div className='bg-blue-500 w-full md:w-96 m-0 m-auto h-96 rounded-lg overflow-hidden' {...handlers}>
             test
           </div>
           <div ref={swipeBtns} className='mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
-            <div className='text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
+            <button className='text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
                 <Cross className='w-5 h-5 fill-current' />
-              </div>
-            <div className='text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
+            </button>
+            <button className='text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
                 <Mark className='w-5 h-5 fill-current' />
-              </div>
-            </div>
+            </button>
+          </div>
         </div>}
-
+        <Transition show={Boolean(error)} enter='transition-opacity duration-500' enterFrom='opacity-0'>
+          <div className='absolute top-8 md:right-8 flex items-center justify-center'>
+            <div className='bg-red-300 w-9/12 h-14 flex justify-start items-center rounded-lg p-4 text-black font-bold'>
+              {error}
+            </div>
+          </div>
+        </Transition>
       </div>
       <Footer />
     </div>

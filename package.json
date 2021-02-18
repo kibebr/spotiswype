@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^6.1.1",
+    "@headlessui/react": "^0.3.1",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.7.1",
@@ -19,6 +20,7 @@
     "react-hot-loader": "^4.13.0",
     "react-scripts": "4.0.2",
     "react-swipeable": "^6.0.1",
+    "react-transition-group": "^4.4.1",
     "typescript": "^4.1.5",
     "web-vitals": "^1.1.0"
   },
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss7-compat": "^2.0.3",
+    "@types/react-transition-group": "^4.4.0",
     "autoprefixer": "^9.8.6",
     "postcss": "^7.0.35",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.3"
