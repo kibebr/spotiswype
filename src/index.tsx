@@ -5,45 +5,22 @@ import { getHashParams } from './utils.js'
 import Mark from './components/icons/Mark.js'
 import Cross from './components/icons/Cross.js'
 import { useSwipeable } from 'react-swipeable'
+import { getProfile, getSavedTracks } from './services/SpotifyAPI'
+
+type Song = {
+  id: string,
+  name: string,
+  author: string,
+  imgUrl: string,
+  selected: boolean
+}
 
 const { 
   REACT_APP_CLIENT_ID,
   REACT_APP_REDIRECT_URI
 } = process.env
 
-const getProfile = (accessToken) => new Promise((resolve, reject) => {
-  const request = new XMLHttpRequest()
-  request.open('GET', 'https://api.spotify.com/v1/me')
-  request.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-
-  request.onload = () => {
-    if (request.status >= 400 && request.status <= 500) {
-      reject(Error(JSON.parse(request.responseText)))
-    } else {
-      resolve(JSON.parse(request.responseText))
-    }
-  }
-
-  request.send()
-})
-
-const getSavedTracks = (accessToken) => new Promise((resolve, reject) => {
-  const request = new XMLHttpRequest()
-  request.open('GET', 'https://api.spotify.com/v1/me/tracks')
-  request.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-
-  request.onload = () => {
-    if (request.status >= 400 && request.status <= 500) {
-      reject(Error(JSON.parse(request.responseText)))
-    } else {
-      resolve(JSON.parse(request.responseText))
-    }
-  }
-
-  request.send()
-})
-
-const song = {
+const song: Song = {
   id: '9',
   name: 'Still Goin Down',
   author: 'Morgan Wallen',
@@ -96,7 +73,7 @@ const Home = () => {
 
   const scopes = 'user-read-private, user-library-read'
 
-  const getX = (str) => {
+  const getX = (str: string) => {
     var n = str.indexOf("(");
     var n1 = str.indexOf(",");
 
@@ -108,7 +85,9 @@ const Home = () => {
       const { target } = swipeData.event
 
       target.style.transform = 'translate(0px, 0px) rotate(0deg)'
-      swipeBtns.current.style.transform = 'translate(0px, 0px) rotate(0deg)'
+      if (swipeBtns) {
+        swipeBtns.current.style.transform = 'translate(0px, 0px) rotate(0deg)'
+      }
     },
     onSwiping: (swipeData) => {
       const { target } = swipeData.event
@@ -134,8 +113,6 @@ const Home = () => {
     const hashParams = getHashParams()
 
     if (hashParams.access_token) {
-      setAccessToken(hashParams.access_token)
-
       getProfile(hashParams.access_token)
         .then(data => {
           setUser({
@@ -162,10 +139,10 @@ const Home = () => {
     url += '&scope=' + encodeURIComponent(scopes)
     url += '&redirect_uri=' + encodeURIComponent(REACT_APP_REDIRECT_URI)
     
-    window.location = url
+    window.location.href = url
   }
   
-  const handleSelectSong = (id) => {
+  const handleSelectSong = (id: string) => {
     setSongs(songs => songs.map(s => s.id === id ? { ...s, selected: !s.selected } : s))
     console.log(songs)
   }
