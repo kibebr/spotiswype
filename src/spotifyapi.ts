@@ -104,8 +104,8 @@ export const getSongs: ({ token }: User) => TaskEither<unknown, Song[]> = flow(
     filter(({ preview_url }) => typeof preview_url === 'string'),
     amap(({ name, preview_url, album }) => ({ 
       name, 
-      previewUrl: preview_url,
+      audio: new Audio(preview_url as string),
       imageUrl: album.images[1].url
-    } as Song))
+    }))
   ))
 )

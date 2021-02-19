@@ -33,6 +33,5 @@ module.exports = {
   variants: {
     extend: {},
   },
-  plugins: [],
-  important: true
+  plugins: []
 }
