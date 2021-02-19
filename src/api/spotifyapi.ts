@@ -7,7 +7,7 @@ import {
   getSavedTracks, 
   getSeveralArtists,
   getRecommendedSongs
-} from './services/SpotifyAPI'
+} from '../services/SpotifyAPI'
 import { type, string, array, TypeOf, union, null as _null, Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
 
