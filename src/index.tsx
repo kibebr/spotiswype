@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Transition } from '@headlessui/react'
 import ReactDOM from 'react-dom';
-import { getOrElse } from 'fp-ts/TaskEither'
+import { isLeft } from 'fp-ts/Either'
 import './index.css';
 import { getHashParams } from './utils'
-import Mark from './components/icons/Mark'
-import Cross from './components/icons/Cross'
 import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
+import { ReactComponent as MusicIcon } from './music.svg'
+import { ReactComponent as MarkIcon } from './check.svg'
+import { ReactComponent as CrossIcon } from './cross.svg'
 import { getSongs } from './spotifyapi'
+import { dropLeft } from 'fp-ts/Array'
 
 const { 
   REACT_APP_CLIENT_ID,
@@ -26,9 +28,15 @@ export type User = {
   savedSongs: Song[]
 }
 
+type SwipeDirection
+  = 'LEFT'
+  | 'RIGHT'
+
 const Home = () => {
-  const [user, setUser] = useState()
-  const [error, setError] = useState('This app is a work-in-progress! Contribute at Github.')
+  const [loggedIn, setLoggedIn] = useState<boolean>(false)
+  const [songs, setSongs] = useState<Song[]>([])
+  const [savedSongs, setSavedSongs] = useState<Song[]>([])
+  const [error, setError] = useState<string>()
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
@@ -43,7 +51,7 @@ const Home = () => {
 
   const handlers = useSwipeable({
     onSwiped: (swipeData) => {
-      const target = swipeData.event.currentTarget as HTMLElement
+      const target = swipeData.event.target as HTMLElement
 
       target.style.transform = 'translate(0px, 0px) rotate(0deg)'
       if (swipeBtns.current) {
@@ -51,10 +59,10 @@ const Home = () => {
       }
     },
     onSwiping: (swipeData) => {
-      const target = swipeData.event.currentTarget as HTMLElement
+      const target = swipeData.event.target as HTMLElement
       const { deltaX, deltaY } = swipeData
       
-      const transX = getX(target.style.transform)
+      const transX = target?.style?.transform ? getX(target.style.transform) : 0
 
       target.style.transform = `
         translate(${deltaX < 100 && deltaX > -100 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
@@ -69,7 +77,7 @@ const Home = () => {
   })
 
   useEffect(() => {
-    document.body.classList.add('bg-purple', 'text-white', 'antialiased')
+    document.body.classList.add('bg-black', 'text-white', 'antialiased')
 
     const hashParams = getHashParams()
 
@@ -78,13 +86,53 @@ const Home = () => {
         token: hashParams.access_token,
         savedSongs: []
       }
-      
-      getSongs(user)()
-      .then(data => console.log(data))
 
+      setLoggedIn(true)
+
+      setSongs([
+        {
+          name: 'Little Rain',
+          previewUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779',
+          imageUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'
+        },
+        {
+          name: 'Hallelujah',
+          previewUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779',
+          imageUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'
+        },
+        {
+          name: 'Amen',
+          previewUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779',
+          imageUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'
+        }
+      ])
+
+      // getSongs(user)()
+      // .then(data => {
+      //   if (isLeft(data)) {
+      //     setError(`Uh oh, there was an error! ${data.left}`)
+      //   } else {
+      //     setSongs(data.right)
+      //   }
+      // })
     }
   }, [])
 
+  useEffect(() => {
+    if (songs.length) {
+      const audio = new Audio(songs[0].previewUrl)
+      audio.play()
+    }
+  }, [songs])
+
+  const swipe = (dir: SwipeDirection) => {
+    if (dir === 'RIGHT' && songs.length) {
+      setSavedSongs(s => s.concat(songs[0]))
+    }
+
+    setSongs(dropLeft(1))
+  }
+  
   const handleLogin = () => {
     let url = 'https://accounts.spotify.com/authorize'
 
@@ -97,17 +145,22 @@ const Home = () => {
   }
   
   return (
-    <div className='text-white'>
-      <div className='min-h-screen'>
-        <div className='p-8'>
-          <div className='flex flex-col md:flex-row justify-between'>
+    <div className='text-green-500'>
+      <section className='min-h-screen p-8 md:py-8 md:px-24 flex flex-col'>
+        <div className=''>
+          <div className='flex flex-row justify-between align-baseline'>
             <div className='flex flex-col font-bold'>
-              <h1 className='font-bold text-3xl text-gray-text mb-2'>Spotiswipe</h1>
-              {!user && <p className='font-bold text-xl md:text-2xl text-gray-text'>Find amazing songs by swiping, just like Tinder.</p>}
+              <h1 className='font-bold text-3xl mb-2'>Spotiswipe</h1>
+              {!loggedIn && <p className='font-bold text-xl md:text-2xl text-gray-text'>Find amazing songs by swiping, just like Tinder.</p>}
             </div>
+            <a href='#likedsongs-section'>
+              <button className='bg-green-500 w-10 h-10 p-1 rounded-lg text-white'>
+                <MusicIcon className='m-0 m-auto fill-current' width={16} height={16} />
+              </button>
+            </a>
           </div>
           <div>
-            {!user && 
+            {!loggedIn && 
             <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-green-500 p-2'>
               <img src='/spotify.svg' width={16} height={16} className='mr-2' alt='Spotify logo' />
               <span className='font-bold text-purple'>Log-in with Spotify</span>
@@ -116,27 +169,47 @@ const Home = () => {
           </div>
         </div>
 
-        {<div className='px-8 text-green-200'>
-          <div className='bg-blue-500 w-full md:w-96 m-0 m-auto h-96 rounded-lg overflow-hidden' {...handlers}>
-            test
+        <div className='h-full py-8 flex-1'>
+          {loggedIn && !!songs.length &&
+          <div>
+            <div 
+            style={{ backgroundImage: `url(${songs[0].imageUrl})` }}
+            className='cursor-grab bg-blue-500 bg-cover w-full md:w-96 h-96 m-0 m-auto rounded-lg overflow-hidden' 
+            {...handlers}
+            >
+            </div>
+            <div ref={swipeBtns} className='mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
+              <button onClick={() => swipe('LEFT')} className='text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
+                <CrossIcon className='w-5 h-5 fill-current' />
+              </button>
+              <button onClick={() => swipe('RIGHT')} className='text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
+                <MarkIcon className='w-5 h-5 fill-current' />
+              </button>
+            </div>
           </div>
-          <div ref={swipeBtns} className='mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
-            <button className='text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
-                <Cross className='w-5 h-5 fill-current' />
-            </button>
-            <button className='text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
-                <Mark className='w-5 h-5 fill-current' />
-            </button>
-          </div>
-        </div>}
+          }
+          {!songs.length && <p>Loading songs...</p>}
+        </div>
+       
         <Transition show={Boolean(error)} enter='transition-opacity duration-500' enterFrom='opacity-0'>
           <div className='absolute top-8 md:right-8 flex items-center justify-center'>
-            <div className='bg-red-300 w-9/12 h-14 flex justify-start items-center rounded-lg p-4 text-black font-bold'>
+            <div className='bg-red-300 w-9/12 h-14 flex justify-start items-center rounded-lg p-4 text-red-800 font-bold'>
               {error}
             </div>
           </div>
         </Transition>
-      </div>
+      </section>
+
+      <section id='likedsongs-section' className='bg-red-200 w-full h-96'>
+        <div className='p-8 md:py-8 md:px-24'>
+          <h2 className='font-bold text-3xl'>Liked songs</h2>
+          <ul>
+            {savedSongs.map(s => (
+              <li>{s.name}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
       <Footer />
     </div>
   )

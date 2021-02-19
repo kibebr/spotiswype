@@ -1,6 +1,6 @@
-import { map as temap, of, ap, chain, chainEitherKW, chainW, apSW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/TaskEither'
+import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/TaskEither'
 import { map as amap, filter, takeLeft } from 'fp-ts/Array'
-import { pipe, flow, not, Lazy } from 'fp-ts/function'
+import { pipe, flow, Lazy } from 'fp-ts/function'
 import { toError } from 'fp-ts/Either'
 import { User, Song } from './index'
 import { 
@@ -94,7 +94,7 @@ export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, 
     ap(of<any, string>(token)),
     chain(promise => fromThunk(() => promise))
   )),
-  chainEitherKW(getRecommendationsResponse.decode)
+  chainEitherKW(getRecommendationsResponse.decode),
 )
 
 export const getSongs: ({ token }: User) => TaskEither<unknown, Song[]> = flow(
@@ -109,14 +109,3 @@ export const getSongs: ({ token }: User) => TaskEither<unknown, Song[]> = flow(
     } as Song))
   ))
 )
-
-  /* tryCatch( */
-  /*   () => getSavedTracks(token), */
-  /*   () => 'Could not fetch saved songs.' */
-  /* ), */
-  /* chainEitherKW(getSavedTracksResponse.decode), */
-  /* temap(flow( */
-  /*   prop('items'), */
-  /*   amap(x => x.artists[0].id), */
-  /*   amap(getGenresOfArtist) */
-  /* )), */
