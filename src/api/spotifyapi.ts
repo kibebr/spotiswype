@@ -2,7 +2,7 @@ import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, Task
 import { map as amap, filter, takeLeft } from 'fp-ts/Array'
 import { pipe, flow, Lazy } from 'fp-ts/function'
 import { toError } from 'fp-ts/Either'
-import { User, Song } from './index'
+import { User, Song } from '../index'
 import { 
   getSavedTracks, 
   getSeveralArtists,

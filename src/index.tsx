@@ -59,11 +59,16 @@ const Home = () => {
 
       // target.style.transform = 'translate(0px, 0px) rotate(0deg)'
       if (swipeBtns.current) {
-        swipeBtns.current.style.transform = 'translate(0px, 0px) rotate(0deg)'
+        swipeBtns.current.style.transform = 'rotate(0deg)'
       }
     },
     onSwiping: (swipeData) => {
       const target = swipeData.event.target as HTMLElement
+
+      if (!target.classList.contains('card')) {
+        return
+      }
+
       const { deltaX, deltaY } = swipeData
       
       const transX = target?.style?.transform ? getX(target.style.transform) : 0
@@ -164,7 +169,9 @@ const Home = () => {
         <div className=''>
           <div className='flex flex-row justify-between align-baseline'>
             <div className='flex flex-col font-bold'>
-              <h1 className='font-bold text-3xl md:text-5xl mb-2'>Spotiswype</h1>
+              <a href='http://192.168.0.16:3000'>
+                <h1 className='font-bold text-3xl md:text-5xl mb-2'>Spotiswype</h1>
+              </a>
               {!loggedIn && <p className='font-bold text-xl md:text-2xl text-gray-text'>Find songs you'll enjoy by swiping.</p>}
             </div>
             <a href='#likedsongs-section'>
@@ -185,19 +192,24 @@ const Home = () => {
 
         <div className='h-full relative py-8 flex-1'>
           {loggedIn && !!songs.length &&
-          <div className='outline-black'>
+          <div className='text-center flex justify-center' {...handlers}>
+            {songs.map((song, i) => (
+              <div 
+                className='card absolute transition-transform bg-cover cursor-grab test w-full md:w-96 bg-red-500 shadow-md rounded-md'
+                style={{
+                  transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
+                  opacity: `${10 - ((songs.length - i) * 3)}`,
+                  backgroundImage: `url(${song.imageUrl})`,
+                }}
+              >
+                <button onClick={() => toggleAudio(songs[i])} className='text-white bottom-0 w-full h-24 bg-blur p-1 rounded-b-md'>
+                  {!songPlaying && <PlayIcon className='absolute inset-center' width='32px' height='32px' />}
+                  {songPlaying && <PauseIcon className='absolute inset-center' width='32px' height='32px' />}
+                </button>
+              </div>
+            ))}
 
-            <div className='relative m-0 m-auto cursor-grab h-96 w-full md:w-96 bg-red-200 shadow-md rounded-md'>
-              <button onClick={() => toggleAudio(songs[0])} className='rounded-full bottom-5 inset-center-x absolute w-14 h-14 bg-blur p-1'>
-                {!songPlaying && <PlayIcon className='absolute inset-center fill-current' width='32px' height='32px' />}
-                {songPlaying && <PauseIcon className='absolute inset-center' width='32px' height='32px' />}
-              </button>
-              <audio preload='none'>
-                <source src='https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' />
-              </audio>
-            </div>
-
-            <div ref={swipeBtns} className='shadow-md mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
+            <div ref={swipeBtns} className='absolute bottom-0 shadow-md mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
               <button onClick={() => swipe('LEFT')} className='transition-all text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
                 <CrossIcon className='w-5 h-5 fill-current' />
               </button>
