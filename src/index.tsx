@@ -56,8 +56,27 @@ const Home = () => {
   const handlers = useSwipeable({
     onSwiped: (swipeData) => {
       const target = swipeData.event.target as HTMLElement
+      const { absX, deltaX, deltaY, velocity, vxvy } = swipeData
 
-      // target.style.transform = 'translate(0px, 0px) rotate(0deg)'
+      const moveOutWidth = document.body.clientWidth
+      const shouldKeep = absX < 80 || Math.abs(vxvy[0]) < 0.5
+
+      if (shouldKeep) {
+        console.log('keep!')
+        target.style.transform = ''
+      } else {
+        const endX = Math.max(Math.abs(vxvy[0]) * moveOutWidth, moveOutWidth);
+        const toX = deltaX > 0 ? endX : -endX
+        const endY = Math.abs(vxvy[1]) * moveOutWidth
+        const toY = deltaY > 0 ? endY : -endY
+        
+        const xMulti = deltaX * 0.03
+        const yMulti = deltaY / 80
+        const rotate = xMulti * yMulti
+
+        target.style.transform = `translate(${toX}px, ${toY + deltaY}px) rotate(${rotate}deg)`
+      }
+
       if (swipeBtns.current) {
         swipeBtns.current.style.transform = 'rotate(0deg)'
       }
@@ -69,16 +88,16 @@ const Home = () => {
         return
       }
 
-      const { deltaX, deltaY } = swipeData
-      
-      const transX = target?.style?.transform ? getX(target.style.transform) : 0
 
-      target.style.transform = `
-        translate(${deltaX < 100 && deltaX > -100 ? deltaX / 5 | 0 : transX}px, ${deltaY < 0 ? deltaY / 2 : 0}px) 
-        rotate(${deltaX / 10 | 0}deg)
-      `
+      const { deltaX, deltaY } = swipeData
+      const xMulti = deltaX * 0.03
+      const yMulti = deltaY / 80
+      const rotate = xMulti * yMulti
+
+      target.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`
+
       if (swipeBtns.current) {
-        swipeBtns.current.style.transform = `rotate(${deltaX / 15}deg)`
+        swipeBtns.current.style.transform = `rotate(${rotate}deg)`
       }
     },
     preventDefaultTouchmoveEvent: true,
@@ -195,21 +214,22 @@ const Home = () => {
           <div className='text-center flex justify-center' {...handlers}>
             {songs.map((song, i) => (
               <div 
-                className='card absolute transition-transform bg-cover cursor-grab test w-full md:w-96 bg-red-500 shadow-md rounded-md'
+                className={`card transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
                 style={{
                   transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
                   opacity: `${10 - ((songs.length - i) * 3)}`,
+                  zIndex: i,
                   backgroundImage: `url(${song.imageUrl})`,
                 }}
               >
-                <button onClick={() => toggleAudio(songs[i])} className='text-white bottom-0 w-full h-24 bg-blur p-1 rounded-b-md'>
+                <button onClick={() => toggleAudio(songs[i])} className='text-white bottom-0 w-full h-24 p-1 rounded-b-md'>
                   {!songPlaying && <PlayIcon className='absolute inset-center' width='32px' height='32px' />}
                   {songPlaying && <PauseIcon className='absolute inset-center' width='32px' height='32px' />}
                 </button>
               </div>
             ))}
 
-            <div ref={swipeBtns} className='absolute bottom-0 shadow-md mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
+            <div ref={swipeBtns} className='absolute z-50 bottom-0 shadow-md mt-5 w-32 h-14 py-3 px-6 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-white'>
               <button onClick={() => swipe('LEFT')} className='transition-all text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
                 <CrossIcon className='w-5 h-5 fill-current' />
               </button>

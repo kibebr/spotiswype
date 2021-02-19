@@ -6,6 +6,10 @@
   html {
     scroll-behavior: smooth;
   }
+
+  :focus {
+    outline: none !important;
+  }
   
   .bg-blur {
     background-color: rgba(255, 255, 255, 0.5);
@@ -46,5 +50,9 @@
       left: 50%;
       transform: translate(-50%, 0%) rotate(0deg);
     }
+  }
+
+  .no-transition {
+    transition: none !important;
   }
 }
