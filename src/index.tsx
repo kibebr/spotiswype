@@ -75,6 +75,7 @@ const Home = () => {
         const rotate = xMulti * yMulti
 
         target.style.transform = `translate(${toX}px, ${toY + deltaY}px) rotate(${rotate}deg)`
+        setSongs(dropRight(1))
       }
 
       if (swipeBtns.current) {
@@ -88,6 +89,7 @@ const Home = () => {
         return
       }
 
+      target.classList.add('no-transition')
 
       const { deltaX, deltaY } = swipeData
       const xMulti = deltaX * 0.03
@@ -134,6 +136,8 @@ const Home = () => {
 
   useEffect(() => {
     const hashParams = getHashParams()
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight/100}px`);
+
 
     if (hashParams.access_token) {
       const user: User = {
@@ -183,42 +187,40 @@ const Home = () => {
   }
   
   return (
-    <div className='text-blue-500'>
-      <section className='min-h-screen p-8 md:py-8 md:px-36 flex flex-col'>
-        <div className=''>
+    <div className='text-green-400'>
+      <section className='z-50 min-h-screen p-4 md:py-8 md:px-36 flex flex-col'>
+        <div>
           <div className='flex flex-row justify-between align-baseline'>
             <div className='flex flex-col font-bold'>
               <a href='http://192.168.0.16:3000'>
-                <h1 className='font-bold text-3xl md:text-5xl mb-2'>Spotiswype</h1>
+                <h1 className='font-bold text-3xl md:text-3xl mb-2'>Spotiswype</h1>
               </a>
-              {!loggedIn && <p className='font-bold text-xl md:text-2xl text-gray-text'>Find songs you'll enjoy by swiping.</p>}
+              {!loggedIn && <p className='font-bold text-xl md:text-1xl text-gray-400'>Find songs you'll enjoy by swiping.</p>}
             </div>
             <a href='#likedsongs-section'>
-              <button className='bg-blue-500 w-10 h-10 p-1 rounded-full text-white'>
-                <StarIcon className='m-0 m-auto fill-current' width={16} height={16} />
+              <button className='relative bg-green-400 w-10 h-10 p-1 rounded-md text-black'>
+                <StarIcon className='absolute inset-center fill-current' width={16} height={16} />
               </button>
             </a>
           </div>
           <div>
             {!loggedIn && 
-            <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-blue-500 p-2'>
+            <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-green-500 p-2'>
               <SpotifyIcon className='mr-2' width='16px' height='16px' />
-              <span className='font-bold text-white'>Log-in with Spotify</span>
+              <span className='font-bold text-black'>Log-in with Spotify</span>
             </button>
             }
           </div>
         </div>
 
-        <div className='h-full relative py-8 flex-1'>
+        <div className='h-full relative py-7 flex-1'>
           {loggedIn && !!songs.length &&
-          <div className='text-center flex justify-center' {...handlers}>
+          <div className='text-center flex justify-center w-full' {...handlers}>
             {songs.map((song, i) => (
               <div 
-                className={`card transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
+                className={`card top-0 transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
                 style={{
                   transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
-                  opacity: `${10 - ((songs.length - i) * 3)}`,
-                  zIndex: i,
                   backgroundImage: `url(${song.imageUrl})`,
                 }}
               >
