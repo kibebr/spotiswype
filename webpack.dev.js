@@ -23,5 +23,10 @@ module.exports = merge(common, {
     new HtmlWebpackPlugin({
       template: './src/index.html'
     })
-  ]
+  ],
+  devServer: {
+    port: 3000,
+    host: '0.0.0.0',
+    historyApiFallback: true
+  }
 })

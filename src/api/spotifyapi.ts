@@ -4,7 +4,7 @@ import { pipe, flow, Lazy } from 'fp-ts/function'
 import { toError } from 'fp-ts/Either'
 import { User, Song } from '../index'
 import { 
-  getSavedTracks, 
+  getSavedTracks,
   getSeveralArtists,
   getRecommendedSongs
 } from '../services/SpotifyAPI'
@@ -52,7 +52,7 @@ type SavedTracksResponse = TypeOf<typeof getSavedTracksResponse>
 type SeveralArtistsResponse = TypeOf<typeof getSeveralArtistsResponseV>
 type RecommendationsResponse = TypeOf<typeof getRecommendationsResponse>
 
-const get5Items: (t: SavedTracksResponse) => ItemResponse[] = flow(prop('items'), takeLeft(2)) 
+const get5Items: (t: SavedTracksResponse) => ItemResponse[] = flow(prop('items'), takeLeft(2))
 
 const get5Artists: (savedTracks: SavedTracksResponse) => ArtistResponse[] = flow(
   get5Items,
@@ -60,12 +60,12 @@ const get5Artists: (savedTracks: SavedTracksResponse) => ArtistResponse[] = flow
 )
 
 const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> => pipe(
-  fromThunk(() => getSavedTracks(token)),
+  fromThunk(async () => await getSavedTracks(token)),
   chainEitherKW(getSavedTracksResponse.decode)
 )
 
 const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> => pipe(
-  fromThunk(() => getSeveralArtists(ids)(token)),
+  fromThunk(async () => await getSeveralArtists(ids)(token)),
   chainEitherKW(getSeveralArtistsResponseV.decode)
 )
 
@@ -79,7 +79,7 @@ export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, 
       amap(flow(prop('track'), prop('id')))
     ))),
     ap(of(pipe(
-      get5Artists(savedTracks), 
+      get5Artists(savedTracks),
       amap(prop('id'))
     ))),
     apW(pipe(
@@ -87,23 +87,23 @@ export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, 
       amap(prop('id')),
       (ids) => tryGetSeveralArtists(ids)(token),
       temap(flow(
-        prop('artists'), 
+        prop('artists'),
         amap(a => a.genres[0])
       ))
     )),
     ap(of<any, string>(token)),
-    chain(promise => fromThunk(() => promise))
+    chain(promise => fromThunk(async () => await promise))
   )),
-  chainEitherKW(getRecommendationsResponse.decode),
+  chainEitherKW(getRecommendationsResponse.decode)
 )
 
-export const getSongs: ({ token }: User) => TaskEither<unknown, Song[]> = flow(
+export const getSongs: ({ token }: User) => TaskEither<Error | Errors, Song[]> = flow(
   getRecommendations,
   temap(flow(
     prop('tracks'),
     filter(({ preview_url }) => typeof preview_url === 'string'),
     amap(({ name, preview_url, album }) => ({ 
-      name, 
+      name,
       audio: new Audio(preview_url as string),
       imageUrl: album.images[1].url
     }))
