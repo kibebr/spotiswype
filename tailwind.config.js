@@ -1,13 +1,12 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-  purge: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
+  purge: ['./src/**/*.{js,jsx,ts,tsx}'],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    fontFamily: {
-      sans: ['Karla', ...defaultTheme.fontFamily.sans]
-    },
     extend: {
+      fontFamily: {
+      },
       colors: {
         green: {
           '50':  '#f6f9f6',
@@ -21,12 +20,15 @@ module.exports = {
           '800': '#295527',
           '900': '#224423',
         },
-        'purple': '#010981',
-        'gray-text': '#7F84C1',
-        'purple-strong': '#184BFF'
+        'purple': '#05047B',
+        'gray-text': '#7F86BD',
+        'purple-strong': '#1D44FE'
       },
       cursor: {
         grab: 'grab'
+      },
+      animation: {
+        'from-left': 'fromLeft 0.3s ease-in-out'
       }
     },
   },

@@ -12,8 +12,12 @@
   }
   
   .bg-blur {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .bg-grey {
+    background-color: #f5f5f7;
   }
 
   .inset-center {
@@ -25,6 +29,11 @@
   .inset-center-x {
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .inset-center-y {
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   .test {
@@ -54,5 +63,9 @@
 
   .no-transition {
     transition: none !important;
+  }
+
+  .squircle {
+    clip-path: url(#squircleClip);
   }
 }
