@@ -2,7 +2,7 @@ import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, Task
 import { map as amap, filter, takeLeft } from 'fp-ts/Array'
 import { pipe, flow, Lazy } from 'fp-ts/function'
 import { toError } from 'fp-ts/Either'
-import { User, Song } from '../index'
+import { Song } from '../index'
 import { 
   getSavedTracks,
   getSeveralArtists,
@@ -69,7 +69,7 @@ const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Erro
   chainEitherKW(getSeveralArtistsResponseV.decode)
 )
 
-export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
+export const getRecommendations = (token: string): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
   Do,
   bind('savedTracks', () => tryGetSavedTracks(token)),
   chainW(({ savedTracks }) => pipe(
@@ -97,7 +97,7 @@ export const getRecommendations = ({ token }: User): TaskEither<Error | Errors, 
   chainEitherKW(getRecommendationsResponse.decode)
 )
 
-export const getSongs: ({ token }: User) => TaskEither<Error | Errors, Song[]> = flow(
+export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = flow(
   getRecommendations,
   temap(flow(
     prop('tracks'),

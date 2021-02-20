@@ -13,7 +13,7 @@ import PlayIcon from './assets/play-fill.svg'
 import PauseIcon from './assets/pause-fill.svg'
 import SpotifyIcon from './assets/spotify.svg'
 import { getSongs } from './api/spotifyapi'
-import { dropRight } from 'fp-ts/Array'
+import { dropRight, reverse } from 'fp-ts/Array'
 
 const {
   REACT_APP_CLIENT_ID,
@@ -26,17 +26,12 @@ export type Song = {
   imageUrl: string
 }
 
-export type User = {
-  token: string
-  savedSongs: Song[]
-}
-
 type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
 
 export default function Home (): JSX.Element {
-  const [loggedIn, setLoggedIn] = useState<boolean>(false)
+  const [token, setToken] = useState<string | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
@@ -53,7 +48,6 @@ export default function Home (): JSX.Element {
       const moveOutWidth = document.body.clientWidth
       const shouldKeep = absX < 80 || Math.abs(vxvy[0]) < 0.5
 
-      console.log('onSwiped called')
       if (shouldKeep) {
         target.style.transform = ''
       } else {
@@ -70,14 +64,13 @@ export default function Home (): JSX.Element {
         setSongs(dropRight(1))
       }
 
-      if (swipeBtns.current) {
+      if (swipeBtns.current !== null) {
         swipeBtns.current.style.transform = 'rotate(0deg)'
       }
     },
     onSwiping: (swipeData) => {
       const target = swipeData.event.target as HTMLElement
 
-      console.log('onSwiping called')
       if (!target.classList.contains('card')) {
         return
       }
@@ -91,7 +84,7 @@ export default function Home (): JSX.Element {
 
       target.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`
 
-      if (swipeBtns.current) {
+      if (swipeBtns.current !== null) {
         swipeBtns.current.style.transform = `rotate(${rotate}deg)`
       }
     },
@@ -100,11 +93,11 @@ export default function Home (): JSX.Element {
   })
 
   const refresh = (): void => {
-    setSongs([
+    setSongs(s => [
       {
         name: 'Little Rain',
         audio: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-        imageUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'
+        imageUrl: 'https://imagesvc.meredithcorp.io/v3/mm/image?q=85&c=sc&poi=face&w=2000&h=2000&url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F20%2F2019%2F10%2Ftaylor-swift-albums-1.jpg'
       },
       {
         name: 'Hallelujah',
@@ -116,41 +109,27 @@ export default function Home (): JSX.Element {
         audio: new Audio('https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'),
         imageUrl: 'https://i.scdn.co/image/ab67616d00001e02d77ead842f06780393b7b779'
       }
-    ])
+    ].concat(s))
   }
 
-  useEffect(() => {
-    if (!loggedIn) {
-    } else {
-      refresh()
-    }
-  }, [loggedIn])
-
-  useEffect(() => {
+  useEffect((): void => {
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
     const hashParams = getHashParams()
-    document.documentElement.style.setProperty('--vh', `${window.innerHeight/100}px`);
 
-    if (hashParams.access_token) {
-      const user: User = {
-        token: hashParams.access_token,
-        savedSongs: []
-      }
-
-      getSongs(user)()
-        .then(data => {
-          if (isLeft(data)) {
-
-          } else {
-            setSongs(data.right)
-          }
-        })
-      setLoggedIn(true)
+    if ((hashParams.access_token ?? '') !== '') {
+      setToken(hashParams.access_token)
     }
   }, [])
 
-  const swipe = (dir: SwipeDirection) => {
+  useEffect((): void => {
+    if (songs.length === 0 && token !== null) {
+      refresh()
+    }
+  }, [songs, token])
+
+  const swipe = (dir: SwipeDirection): void => {
     if (dir === 'RIGHT' && songs.length !== 0) {
-      setSavedSongs(s => s.concat(songs[0]))
+      setSavedSongs(s => s.concat(songs[songs.length - 1]))
     }
 
     setSongs(dropRight(1))
@@ -167,9 +146,15 @@ export default function Home (): JSX.Element {
     window.location.href = url
   }
 
+  const handleError = (err: Error): void => {
+    console.error(err)
+  }
+
   const toggleAudio = (song: Song): void => {
     if (song.audio.paused) {
       song.audio.play()
+        .catch(handleError)
+
       setSongPlaying(true)
     } else {
       song.audio.pause()
@@ -195,7 +180,7 @@ export default function Home (): JSX.Element {
               <a href='http://192.168.0.16:3000'>
                 <h1 className='font-bold text-3xl md:text-3xl mb-2'>Spotiswype</h1>
               </a>
-              {!loggedIn && <p className='font-bold text-xl md:text-1xl text-gray-400'>Find songs you'll enjoy by swiping.</p>}
+              {token === null && <p className='font-bold text-xl md:text-1xl text-gray-400'>Find songs you'll enjoy by swiping.</p>}
             </div>
             <a href='#likedsongs-section'>
               <div className='relative'>
@@ -208,7 +193,7 @@ export default function Home (): JSX.Element {
             </a>
           </div>
           <div>
-            {!loggedIn &&
+            {token === null &&
             <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-green-400 p-2'>
               <SpotifyIcon className='mr-2' width='16px' height='16px' />
               <span className='font-bold text-black'>Log-in with Spotify</span>
@@ -218,16 +203,17 @@ export default function Home (): JSX.Element {
         </div>
 
         <div className='h-full relative py-7 flex-1'>
-          {loggedIn && !!songs.length &&
+          {token !== null && songs.length !== 0 &&
           <div className='text-center flex justify-center w-full' {...handlers}>
             {songs.map((song, i) => (
               <div
                 className={`card top-0 transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
                 style={{
                   transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
-                  backgroundImage: `url(${song.imageUrl})`
+                  backgroundColor: `blue`
                 }}
               >
+                {song.name}
                 <button onClick={() => toggleAudio(songs[i])} className='text-black absolute bg-blur inset-center w-16 h-16 p-1 rounded-full'>
                   {!songPlaying && <PlayIcon className='absolute inset-center' width='32px' height='32px' />}
                   {songPlaying && <PauseIcon className='absolute inset-center' width='32px' height='32px' />}
@@ -245,7 +231,7 @@ export default function Home (): JSX.Element {
             </div>
           </div>
           }
-          {!songs.length && loggedIn && <p>Loading songs...</p>}
+          {songs.length === 0 && token !== null && <p>Loading songs...</p>}
         </div>
 
         <Transition show={Boolean(error)} enter='transition-opacity duration-500' enterFrom='opacity-0'>
@@ -265,7 +251,7 @@ export default function Home (): JSX.Element {
               <li>{s.name}</li>
             ))}
           </ul>
-          {!savedSongs.length && <p>Songs you swiped right will appear here.</p>}
+          {savedSongs.length === 0 && <p>Songs you swiped right will appear here.</p>}
         </div>
       </section>
       <Footer />
