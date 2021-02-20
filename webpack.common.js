@@ -13,7 +13,15 @@ module.exports = {
     }, {
       test: /\.svg$/,
       exclude: /node_modules/,
-      use: ['@svgr/webpack']
+      use: [{
+        loader: '@svgr/webpack',
+        options: {
+          ref: true,
+          icon: true
+        }
+      }, {
+        loader: 'url-loader'
+      }]
     }]
   },
   plugins: [

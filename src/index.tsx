@@ -6,14 +6,14 @@ import './index.css'
 import { getHashParams } from './utils'
 import Footer from './components/Footer'
 import { useSwipeable } from 'react-swipeable'
-import StarIcon from './assets/music-note-list.svg'
-import MarkIcon from './assets/check.svg'
-import CrossIcon from './assets/cross.svg'
-import PlayIcon from './assets/play-fill.svg'
-import PauseIcon from './assets/pause-fill.svg'
-import SpotifyIcon from './assets/spotify.svg'
+import { ReactComponent as StarIcon } from './assets/music-note-list.svg'
+import { ReactComponent as MarkIcon } from './assets/check.svg'
+import { ReactComponent as CrossIcon } from './assets/cross.svg'
+import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
+import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
+import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { getSongs } from './api/spotifyapi'
-import { dropRight, reverse } from 'fp-ts/Array'
+import { dropRight } from 'fp-ts/Array'
 
 const {
   REACT_APP_CLIENT_ID,
@@ -163,7 +163,7 @@ export default function Home (): JSX.Element {
   }
 
   return (
-    <div className='text-green-400 font-bold'>
+    <div className='font-bold text-green-400'>
       <svg width="10" height="10" viewBox="0 0 10 10">
   <clipPath id="squircleClip" clipPathUnits="objectBoundingBox">
     <path
@@ -173,28 +173,28 @@ export default function Home (): JSX.Element {
     />
   </clipPath>
 </svg>
-      <section className='z-50 min-h-screen p-4 md:py-8 md:px-56 flex flex-col'>
+      <section className='z-50 flex flex-col min-h-screen p-4 md:py-8 md:px-56'>
         <div>
           <div className='flex flex-row justify-between align-baseline'>
             <div className='flex flex-col font-bold'>
               <a href='http://192.168.0.16:3000'>
-                <h1 className='font-bold text-3xl md:text-3xl mb-2'>Spotiswype</h1>
+                <h1 className='mb-2 text-3xl font-bold md:text-3xl'>Spotiswype</h1>
               </a>
-              {token === null && <p className='font-bold text-xl md:text-1xl text-gray-400'>Find songs you'll enjoy by swiping.</p>}
+              {token === null && <p className='text-xl font-bold text-gray-400 md:text-1xl'>Find songs you'll enjoy by swiping.</p>}
             </div>
             <a href='#likedsongs-section'>
               <div className='relative'>
-                <div className='absolute hidden transform -translate-x-3 squircle w-8 h-8 p-1 bg-green-400 text-white'>
+                <div className='absolute hidden w-8 h-8 p-1 text-white bg-green-400 transform -translate-x-3 squircle'>
                 </div>
-                <button className='relative squircle bg-green-400 w-10 h-10 p-1 text-white'>
-                  <StarIcon className='absolute inset-center fill-current' width={16} height={16} />
+                <button className='relative w-10 h-10 p-1 text-white bg-green-400 squircle'>
+                  <StarIcon className='absolute fill-current inset-center' width={32} height={32} />
                 </button>
               </div>
             </a>
           </div>
           <div>
             {token === null &&
-            <button onClick={handleLogin} className='mt-5 rounded flex flex-row items-center bg-green-400 p-2'>
+            <button onClick={handleLogin} className='flex flex-row items-center p-2 mt-5 bg-green-400 rounded'>
               <SpotifyIcon className='mr-2' width='16px' height='16px' />
               <span className='font-bold text-black'>Log-in with Spotify</span>
             </button>
@@ -202,9 +202,9 @@ export default function Home (): JSX.Element {
           </div>
         </div>
 
-        <div className='h-full relative py-7 flex-1'>
+        <div className='relative flex-1 h-full py-7'>
           {token !== null && songs.length !== 0 &&
-          <div className='text-center flex justify-center w-full' {...handlers}>
+          <div className='flex justify-center w-full text-center' {...handlers}>
             {songs.map((song, i) => (
               <div
                 className={`card top-0 transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
@@ -214,18 +214,18 @@ export default function Home (): JSX.Element {
                 }}
               >
                 {song.name}
-                <button onClick={() => toggleAudio(songs[i])} className='text-black absolute bg-blur inset-center w-16 h-16 p-1 rounded-full'>
-                  {!songPlaying && <PlayIcon className='absolute inset-center' width='32px' height='32px' />}
-                  {songPlaying && <PauseIcon className='absolute inset-center' width='32px' height='32px' />}
+                <button onClick={() => toggleAudio(songs[i])} className='absolute w-16 h-16 p-1 text-black rounded-full bg-blur inset-center'>
+                  {!songPlaying && <PlayIcon className='absolute w-40 h-40 inset-center' width={32} height={32} />}
+                  {songPlaying && <PauseIcon className='absolute w-40 h-40 inset-center' width={32} height={32} />}
                 </button>
               </div>
             ))}
 
-            <div ref={swipeBtns} className='absolute z-50 bottom-20 w-32 h-14 py-3 px-5 m-0 m-auto flex flex-row items-center justify-between rounded-full bg-blur'>
-              <button onClick={() => swipe('LEFT')} className='transition-all text-red-500 hover:bg-red-500 hover:text-white rounded p-2'>
+            <div ref={swipeBtns} className='absolute z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto rounded-full bottom-20 h-14 bg-blur'>
+              <button onClick={() => swipe('LEFT')} className='p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white'>
                 <CrossIcon className='w-5 h-5 fill-current' />
               </button>
-              <button onClick={() => swipe('RIGHT')} className='transition-all text-green-500 hover:bg-green-500 hover:text-white rounded p-2'>
+              <button onClick={() => swipe('RIGHT')} className='p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white'>
                 <MarkIcon className='w-5 h-5 fill-current' />
               </button>
             </div>
@@ -235,17 +235,17 @@ export default function Home (): JSX.Element {
         </div>
 
         <Transition show={Boolean(error)} enter='transition-opacity duration-500' enterFrom='opacity-0'>
-          <div className='absolute top-8 md:right-8 flex items-center justify-center'>
-            <div className='bg-red-300 w-9/12 h-14 flex justify-start items-center rounded-lg p-4 text-red-800 font-bold'>
+          <div className='absolute flex items-center justify-center top-8 md:right-8'>
+            <div className='flex items-center justify-start w-9/12 p-4 font-bold text-red-800 bg-red-300 rounded-lg h-14'>
               {error}
             </div>
           </div>
         </Transition>
       </section>
 
-      <section id='likedsongs-section' className='bg-black w-full h-96'>
+      <section id='likedsongs-section' className='w-full bg-black h-96'>
         <div className='p-8 md:py-8 md:px-56'>
-          <h2 className='font-bold text-3xl'>Liked songs</h2>
+          <h2 className='text-3xl font-bold'>Liked songs</h2>
           <ul>
             {savedSongs.map(s => (
               <li>{s.name}</li>
