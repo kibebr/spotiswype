@@ -123,11 +123,22 @@ export default function Home (): JSX.Element {
     }
   }, [songs, token])
 
+  useEffect((): void => {
+    if (songPlaying && songs.length >= 1) {
+      songs[songs.length - 1].audio.play()
+        .catch(err => {
+          setSongPlaying(false)
+          console.error(err)
+        })
+    }
+  }, [songs])
+
   const swipe = (dir: SwipeDirection): void => {
     if (dir === 'RIGHT' && songs.length !== 0) {
       setSavedSongs(s => s.concat(songs[songs.length - 1]))
     }
 
+    songs[songs.length - 1].audio.pause()
     setSongs(dropRight(1))
   }
 
@@ -178,7 +189,7 @@ export default function Home (): JSX.Element {
         <div>
           <div className='flex flex-row items-center justify-between align-baseline'>
             <a href='http://192.168.0.16:3000'>
-              <h1 className='mb-2 font-bold text-1xl fr md:text-3xl rounded-2xl hover:text-white transition-colors'>
+              <h1 className='mb-2 text-3xl font-bold fr md:text-3xl rounded-2xl hover:text-white transition-colors'>
                 spotiswype
               </h1>
             </a>
