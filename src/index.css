@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --fullheight: calc(var(--vh, 1vh) * 100);
+  }
+
   html {
     scroll-behavior: smooth;
   }
@@ -37,7 +41,7 @@
   }
 
   .test {
-    height: 70vh;
+    height: 74vh;
   }
 
   .from-left {
@@ -69,11 +73,15 @@
     clip-path: url(#squircleClip);
   }
 
+  .min-vh {
+    min-height: var(--fullheight);
+  }
+
   .ab {
-    background-color: #A0FFE8;
+    background-color: #09006B;
   }
 
   .fr {
-    color: rgb(12, 72, 60);
+    color: #1931C9;
   }
 }

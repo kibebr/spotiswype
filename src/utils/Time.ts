@@ -6,4 +6,4 @@ export const msToMMSS = (ms: number): [number, number] => [
   (ms % 60000) / 1000
 ]
 
-export const mmssToString = (mms: [number, number]): string => `${mms[0]}:${(mms[1] < 10 ? '0' : '') + String(mms[1])}`
+export const mmssToString = (mms: [number, number]): string => `${mms[0]}:${(mms[1] < 10 ? '0' : '')}` + `${mms[1]}`

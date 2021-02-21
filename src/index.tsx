@@ -3,11 +3,11 @@ import { Transition } from '@headlessui/react'
 import { render } from 'react-dom'
 import { isLeft } from 'fp-ts/Either'
 import './index.css'
-import { getHashParams } from './utils'
+import { getHashParams } from './utils/HashParams'
 import Footer from './components/Footer'
 import { SongCard } from './components/SongCard'
 import { useSwipeable } from 'react-swipeable'
-import { ReactComponent as StarIcon } from './assets/music-note-list.svg'
+import { ReactComponent as StarIcon } from './assets/two-vertical-dots.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
@@ -27,11 +27,16 @@ export interface Song {
   imageUrl: string
 }
 
+export type Preferences = {
+  bpm: string
+}
+
 type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
 
 export default function Home (): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [token, setToken] = useState<string | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
@@ -164,65 +169,64 @@ export default function Home (): JSX.Element {
           />
         </clipPath>
       </svg>
-      <section className='z-50 flex flex-col min-h-screen p-4 m-0 m-auto md:py-8 max-w-screen-sm'>
+      <section className='z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm'>
+        <Transition show={menuOpen} enter='transition-all duration-1000' enterFrom='max-h-0'>
+          <div className='absolute top-0 z-50 w-full max-h-screen bg-white hinset-center-x max-w-screen-sm'>
+            menu!
+          </div>
+        </Transition>
         <div>
-          <div className='flex flex-row justify-between align-baseline'>
-            <div className='flex flex-col font-bold'>
-              <a href='http://192.168.0.16:3000'>
-                <h1 className='mb-2 text-3xl font-bold fr md:text-3xl'>
-                  Spotiswype
-                </h1>
-              </a>
-              {token === null && <p className='text-xl font-bold text-gray-400 md:text-1xl'>Find songs you'll enjoy by swiping.</p>}
-            </div>
-            <a href='#likedsongs-section'>
-              <div className='relative'>
-                <div className='absolute hidden w-8 h-8 p-1 text-white bg-green-400 transform -translate-x-3 squircle' />
-                <button className='relative w-10 h-10 p-1 text-white bg-green-400 squircle'>
-                  <StarIcon className='absolute fill-current inset-center' width={16} height={16} />
-                </button>
-              </div>
+          <div className='flex flex-row items-center justify-between align-baseline'>
+            <a href='http://192.168.0.16:3000'>
+              <h1 className='mb-2 font-bold text-1xl fr md:text-3xl rounded-2xl hover:text-white transition-colors'>
+                spotiswype
+              </h1>
             </a>
+            <button onClick={() => setMenuOpen(s => !s)} className='relative hover:text-white fr'>
+              <StarIcon className='absolute fill-current transition-colors inset-center' width={24} height={24} />
+            </button>
+          </div>
+          <div className='flex flex-col justify-between align-baseline'>
+            {token === null && <p className='text-xl font-bold text-gray-400 md:text-1xl'>Find songs you'll enjoy by swiping.</p>}
           </div>
           <div>
             {token === null &&
-              <button onClick={handleLogin} className='flex flex-row items-center p-2 mt-5 bg-green-400 rounded'>
-                <SpotifyIcon className='mr-2' width='16px' height='16px' />
-                <span className='font-bold text-black'>Log-in with Spotify</span>
-              </button>}
-          </div>
+            <button onClick={handleLogin} className='flex flex-row items-center p-2 mt-5 bg-green-400 rounded'>
+              <SpotifyIcon className='mr-2' width='16px' height='16px' />
+              <span className='font-bold text-black'>Log-in with Spotify</span>
+          </button>}
         </div>
+      </div>
 
-        <div className='relative flex-1 h-full py-7'>
-          {token !== null && songs.length !== 0 &&
-            <div className='flex justify-center w-full text-center' {...handlers}>
-              {songs.map((song, i) => (
-                i === songs.length - 1 &&
-                  <div
-                    className={`p-5 card top-0 transition-transform absolute bg-cover cursor-grab test w-full md:w-96 bg-red-500 rounded-md ${''}`}
-                    style={{
-                      transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
-                      backgroundImage: `url(${song.imageUrl})`
-                    }}
-                  >
-                    <span className='font-bold'>{song.name} by Morgan Wallen</span>
-                    <button onClick={() => toggleAudio(songs[i])} className='absolute w-16 h-16 p-1 text-black rounded-full bg-blur inset-center'>
-                      {!songPlaying && <PlayIcon className='absolute inset-center' width={32} height={32} />}
-                      {songPlaying && <PauseIcon className='absolute inset-center' width={32} height={32} />}
-                    </button>
-                  </div>
-              ))}
+      <div className='relative flex-1 h-full'>
+        {token !== null && songs.length !== 0 &&
+        <div className='flex justify-center w-full text-center transform -translate-y-5' {...handlers}>
+          {songs.map((song, i) => (
+            <div
+              className={`p-5 card transition-transform absolute bg-cover bg-center cursor-grab test w-11/12 md:w-6/12 bg-red-500 rounded-3xl ${''}`}
+              style={{
+                transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
+                  backgroundImage: `url(${song.imageUrl})`
+              }}
+            >
+              <span className='font-bold'>{song.name} by Morgan Wallen</span>
+              <button onClick={() => toggleAudio(songs[i])} className='absolute w-16 h-16 p-1 text-black rounded-full bg-blur inset-center'>
+                {!songPlaying && <PlayIcon className='absolute inset-center' width={32} height={32} />}
+            {songPlaying && <PauseIcon className='absolute inset-center' width={32} height={32} />}
+          </button>
+        </div>
+    ))}
 
-              <div ref={swipeBtns} className='absolute z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto rounded-full bottom-20 h-14 bg-blur'>
-                <button onClick={() => swipe('LEFT')} className='p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white'>
-                  <CrossIcon className='w-5 h-5 fill-current' />
-                </button>
-                <button onClick={() => swipe('RIGHT')} className='p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white'>
-                  <MarkIcon className='w-5 h-5 fill-current' />
-                </button>
-              </div>
-            </div>}
-          {songs.length === 0 && token !== null && <p>Loading songs...</p>}
+    <div ref={swipeBtns} className='absolute top-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto bg-white rounded-full h-14'>
+      <button onClick={() => swipe('LEFT')} className='p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white'>
+        <CrossIcon className='w-5 h-5 fill-current' />
+      </button>
+      <button onClick={() => swipe('RIGHT')} className='p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white'>
+        <MarkIcon className='w-5 h-5 fill-current' />
+      </button>
+    </div>
+</div>}
+{songs.length === 0 && token !== null && <p>Loading songs...</p>}
         </div>
 
         <Transition show={Boolean(error)} enter='transition-opacity duration-500' enterFrom='opacity-0'>
@@ -234,7 +238,7 @@ export default function Home (): JSX.Element {
         </Transition>
       </section>
 
-      <section id='likedsongs-section' className='w-full min-h-full bg-white fr transition-all'>
+      <section id='likedsongs-section' className='hidden w-full min-h-full bg-white fr transition-all'>
         <div className='p-4 m-0 m-auto md:py-8 max-w-screen-sm'>
           <h2 className='mb-5 text-3xl font-bold'>Liked songs</h2>
           <ul>
@@ -242,10 +246,9 @@ export default function Home (): JSX.Element {
               <SongCard name={s.name} author='Morgan Wallen' imageUrl={s.imageUrl} />
             ))}
           </ul>
-          {savedSongs.length === 0 && <p>Songs you swiped right will appear here.</p>}
-        </div>
-      </section>
-      <Footer />
+    {savedSongs.length === 0 && <p>Songs you swiped right will appear here.</p>}
+  </div>
+</section>
     </div>
   )
 }
