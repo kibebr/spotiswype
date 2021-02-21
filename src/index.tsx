@@ -23,6 +23,7 @@ const {
 
 export interface Song {
   name: string
+  author: string
   audio: HTMLAudioElement
   imageUrl: string
 }
@@ -77,7 +78,7 @@ export default function Home (): JSX.Element {
     onSwiping: (swipeData) => {
       const target = swipeData.event.target as HTMLElement
 
-      if (!target.classList.contains('card')) {
+      if (!target.classList.contains('card') || Number(target.id) !== songs.length - 1) {
         return
       }
 
@@ -171,15 +172,6 @@ export default function Home (): JSX.Element {
 
   return (
     <div className='font-bold text-green-400'>
-      <svg width='10' height='10' viewBox='0 0 10 10'>
-        <clipPath id='squircleClip' clipPathUnits='objectBoundingBox'>
-          <path
-            fill='red'
-            stroke='none'
-            d='M 0,0.5 C 0,0 0,0 0.5,0 S 1,0 1,0.5 1,1 0.5,1 0,1 0,0.5'
-          />
-        </clipPath>
-      </svg>
       <section className='z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm'>
         <Transition show={menuOpen} enter='transition-all duration-1000' enterFrom='max-h-0'>
           <div className='absolute top-0 z-50 w-full max-h-screen bg-white hinset-center-x max-w-screen-sm'>
@@ -193,9 +185,11 @@ export default function Home (): JSX.Element {
                 spotiswype
               </h1>
             </a>
+            {token !== null &&
             <button onClick={() => setMenuOpen(s => !s)} className='relative hover:text-white fr'>
               <StarIcon className='absolute fill-current transition-colors inset-center' width={24} height={24} />
             </button>
+            }
           </div>
           <div className='flex flex-col justify-between align-baseline'>
             {token === null && <p className='text-xl font-bold text-gray-400 md:text-1xl'>Find songs you'll enjoy by swiping.</p>}
@@ -214,19 +208,21 @@ export default function Home (): JSX.Element {
         <div className='flex justify-center w-full text-center transform -translate-y-5' {...handlers}>
           {songs.map((song, i) => (
             <div
+              id={`${i}`}
               className={`p-5 card transition-transform absolute bg-cover bg-center cursor-grab test w-11/12 md:w-6/12 bg-red-500 rounded-3xl ${''}`}
               style={{
                 transform: `scale(${(20 - (songs.length - i)) / 20}) translateY(${30 * (songs.length - i)}px)`,
-                  backgroundImage: `url(${song.imageUrl})`
+                backgroundImage: `url(${song.imageUrl})`
               }}
+              
             >
-              <span className='font-bold'>{song.name} by Morgan Wallen</span>
+              <span className='font-bold'>{song.name} by {song.author}</span>
               <button onClick={() => toggleAudio(songs[i])} className='absolute w-16 h-16 p-1 text-black rounded-full bg-blur inset-center'>
                 {!songPlaying && <PlayIcon className='absolute inset-center' width={32} height={32} />}
             {songPlaying && <PauseIcon className='absolute inset-center' width={32} height={32} />}
           </button>
         </div>
-    ))}
+        ))}
 
     <div ref={swipeBtns} className='absolute top-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto bg-white rounded-full h-14'>
       <button onClick={() => swipe('LEFT')} className='p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white'>
@@ -254,7 +250,7 @@ export default function Home (): JSX.Element {
           <h2 className='mb-5 text-3xl font-bold'>Liked songs</h2>
           <ul>
             {savedSongs.map(s => (
-              <SongCard name={s.name} author='Morgan Wallen' imageUrl={s.imageUrl} />
+              <SongCard name={s.name} author={s.author} imageUrl={s.imageUrl} />
             ))}
           </ul>
     {savedSongs.length === 0 && <p>Songs you swiped right will appear here.</p>}

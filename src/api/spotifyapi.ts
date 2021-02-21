@@ -20,6 +20,7 @@ const getSeveralArtistsResponseV = type({
 })
 
 const artistResponseV = type({
+  name: string,
   id: string
 })
 
@@ -41,6 +42,7 @@ const getRecommendationsResponse = type({
         url: string
       }))
     }),
+    artists: array(artistResponseV),
     name: string,
     preview_url: union([string, _null])
   }))
@@ -102,8 +104,9 @@ export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = f
   temap(flow(
     prop('tracks'),
     filter(({ preview_url }) => typeof preview_url === 'string'),
-    amap(({ name, preview_url, album }) => ({
+    amap(({ name, preview_url, album, artists }) => ({
       name,
+      author: artists[0].name,
       audio: new Audio(preview_url as string),
       imageUrl: album.images[1].url
     }))
