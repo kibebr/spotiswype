@@ -5,7 +5,8 @@
   "main": "src/index.tsx",
   "scripts": {
     "build": "NODE_ENV='production' webpack --config webpack.prod.js",
-    "serve": "webpack serve --config webpack.dev.js"
+    "serve": "webpack serve --config webpack.dev.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
