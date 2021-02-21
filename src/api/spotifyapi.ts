@@ -3,7 +3,7 @@ import { map as amap, filter, takeLeft } from 'fp-ts/Array'
 import { pipe, flow, Lazy } from 'fp-ts/function'
 import { toError } from 'fp-ts/Either'
 import { Song } from '../index'
-import { 
+import {
   getSavedTracks,
   getSeveralArtists,
   getRecommendedSongs
@@ -102,7 +102,7 @@ export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = f
   temap(flow(
     prop('tracks'),
     filter(({ preview_url }) => typeof preview_url === 'string'),
-    amap(({ name, preview_url, album }) => ({ 
+    amap(({ name, preview_url, album }) => ({
       name,
       audio: new Audio(preview_url as string),
       imageUrl: album.images[1].url

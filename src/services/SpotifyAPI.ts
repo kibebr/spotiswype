@@ -1,6 +1,6 @@
 type HttpRequestType = 'GET' | 'POST'
 
-const newSpotifyRequest = (settings: { type: HttpRequestType, url: string }) => (accessToken: string) => new Promise<unknown>(
+const newSpotifyRequest = (settings: { type: HttpRequestType, url: string }) => async (accessToken: string) => await new Promise<unknown>(
   (resolve, reject) => {
     const request = new XMLHttpRequest()
 

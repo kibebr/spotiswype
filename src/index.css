@@ -68,4 +68,12 @@
   .squircle {
     clip-path: url(#squircleClip);
   }
+
+  .ab {
+    background-color: #A0FFE8;
+  }
+
+  .fr {
+    color: rgb(12, 72, 60);
+  }
 }

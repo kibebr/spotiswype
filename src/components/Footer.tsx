@@ -1,8 +1,8 @@
 import React from 'react'
 
-const Footer = () => (
-  <footer className='p-10 bg-gray-800 h-72 w-full'>
-    <div>
+const Footer = (): JSX.Element => (
+  <footer className='w-full py-8 bg-gray-800 h-72'>
+    <div className='max-w-screen-sm'>
       The footer
     </div>
   </footer>
