@@ -1,7 +1,7 @@
-import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/TaskEither'
-import { map as amap, filter, takeLeft } from 'fp-ts/Array'
-import { pipe, flow, Lazy } from 'fp-ts/function'
-import { toError } from 'fp-ts/Either'
+import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/lib/TaskEither'
+import { map as amap, filter, takeLeft } from 'fp-ts/lib/Array'
+import { pipe, flow, Lazy } from 'fp-ts/lib/function'
+import { toError } from 'fp-ts/lib/Either'
 import { Song } from '../index'
 import {
   getSavedTracks,

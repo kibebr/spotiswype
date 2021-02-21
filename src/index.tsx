@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { render } from 'react-dom'
-import { isLeft } from 'fp-ts/Either'
+import { isLeft } from 'fp-ts/lib/Either'
 import './index.css'
 import { getHashParams } from './utils/HashParams'
 import Footer from './components/Footer'
@@ -14,7 +14,7 @@ import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { getSongs } from './api/spotifyapi'
-import { dropRight } from 'fp-ts/Array'
+import { dropRight } from 'fp-ts/lib/Array'
 
 const {
   REACT_APP_CLIENT_ID,

@@ -33,6 +33,7 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.3.1",
+    "eslint-webpack-plugin": "^2.5.2",
     "fp-ts": "^2.9.5",
     "fp-ts-ramda": "^0.1.7",
     "html-webpack-plugin": "^5.2.0",
@@ -43,11 +44,13 @@
     "postcss-loader": "^5.0.0",
     "style-loader": "^2.0.0",
     "tailwindcss": "^2.0.3",
+    "terser-webpack-plugin": "^5.1.1",
     "ts-jest": "^26.5.1",
     "ts-loader": "^8.0.17",
     "typescript": "^4.1.5",
     "url-loader": "^4.1.1",
     "webpack": "^5.23.0",
+    "webpack-bundle-analyzer": "^4.4.0",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2",
     "webpack-merge": "^5.7.3"
@@ -57,5 +60,7 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-swipeable": "^6.0.1"
-  }
+  },
+  "sideEffects": "false",
+  "module": "true"
 }

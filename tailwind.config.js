@@ -6,6 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        'sans': ['Archivo', ...defaultTheme.fontFamily.sans]
       },
       colors: {
         green: {
@@ -29,6 +30,9 @@ module.exports = {
       },
       animation: {
         'from-left': 'fromLeft 0.3s ease-in-out'
+      },
+      transitionProperty: {
+        'max-height': 'max-height'
       }
     }
   },
