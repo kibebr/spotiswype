@@ -1,75 +1,130 @@
-import { map as temap, of, ap, chain, chainEitherKW, chainW, apW, tryCatch, TaskEither, Do, bind } from 'fp-ts/lib/TaskEither'
-import { map as amap, filter, takeLeft } from 'fp-ts/lib/Array'
+import { 
+  map as temap,
+  of,
+  ap,
+  chain,
+  chainEitherKW,
+  chainW,
+  apW,
+  Do,
+  bind,
+  taskEither,
+  TaskEither
+} from 'fp-ts/lib/TaskEither'
+import { map as amap, filter, takeLeft, sequence } from 'fp-ts/lib/Array'
+import { fold } from 'fp-ts/lib/Monoid'
 import { pipe, flow, Lazy } from 'fp-ts/lib/function'
-import { toError } from 'fp-ts/lib/Either'
-import { Song } from '../index'
+import { getValidationMonoid, left, right, Either } from 'fp-ts/lib/Either'
+import { Song, User, Playlist } from '../index'
+import { tryGetDecode } from '../utils/FP'
 import {
+  getProfile,
+  getPlaylists,
+  getPlaylistTracks,
   getSavedTracks,
   getSeveralArtists,
   getRecommendedSongs
 } from '../services/SpotifyAPI'
-import { type, string, array, TypeOf, union, null as _null, Errors } from 'io-ts'
+import { type, string, array, TypeOf, union, null as _null, intersection, Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
 
-const fromThunk = <A>(thunk: Lazy<Promise<A>>): TaskEither<Error, A> => tryCatch(thunk, toError)
+const ArtistV = type({
+  name: string,
+  id: string
+})
 
-const getSeveralArtistsResponseV = type({
+const AlbumV = type({
+  images: array(type({
+    url: string
+  }))
+})
+
+const ItemV = type({
+  track: type({
+    artists: array(ArtistV),
+    id: string
+  })
+})
+
+const TrackV = type({
+  album: AlbumV,
+  artists: array(ArtistV),
+  id: string,
+  name: string,
+  preview_url: union([_null, string])
+})
+
+const GetPlaylistTracksResponseV = type({
+  items: array(TrackV)
+})
+
+const GetPlaylistsResponseV = type({
+  items: array(type({
+    id: string,
+    name: string
+  }))
+})
+
+const GetProfileResponseV = type({
+  display_name: string,
+  id: string
+})
+
+const GetSeveralArtistsResponseV = type({
   artists: array(type({
     genres: array(string)
   }))
 })
 
-const artistResponseV = type({
-  name: string,
-  id: string
+const GetSavedTracksResponseV = type({
+  items: array(ItemV)
 })
 
-const itemResponseV = type({
-  track: type({
-    artists: array(artistResponseV),
-    id: string
-  })
+const GetRecommendationsResponseV = type({
+  tracks: array(TrackV)
 })
 
-const getSavedTracksResponse = type({
-  items: array(itemResponseV)
-})
+type GetPlaylistTracksResponse = TypeOf<typeof GetPlaylistTracksResponseV>
+type GetPlaylistsResponse = TypeOf<typeof GetPlaylistsResponseV>
+type GetProfileResponse = TypeOf<typeof GetProfileResponseV>
+type Track = TypeOf<typeof TrackV>
+type Item = TypeOf<typeof ItemV>
+type Artist = TypeOf<typeof ArtistV>
+type Album = TypeOf<typeof AlbumV>
+type SavedTracksResponse = TypeOf<typeof GetSavedTracksResponseV>
+type SeveralArtistsResponse = TypeOf<typeof GetSeveralArtistsResponseV>
+type RecommendationsResponse = TypeOf<typeof GetRecommendationsResponseV>
 
-const getRecommendationsResponse = type({
-  tracks: array(type({
-    album: type({
-      images: array(type({
-        url: string
-      }))
-    }),
-    artists: array(artistResponseV),
-    name: string,
-    preview_url: union([string, _null])
-  }))
-})
+const get5Items: (t: SavedTracksResponse) => Item[] = flow(prop('items'), takeLeft(2))
 
-type ItemResponse = TypeOf<typeof itemResponseV>
-type ArtistResponse = TypeOf<typeof artistResponseV>
-type SavedTracksResponse = TypeOf<typeof getSavedTracksResponse>
-type SeveralArtistsResponse = TypeOf<typeof getSeveralArtistsResponseV>
-type RecommendationsResponse = TypeOf<typeof getRecommendationsResponse>
+const get5Artists: (savedTracks: SavedTracksResponse) => Artist[] = flow(get5Items, amap(item => item.track.artists[0]))
 
-const get5Items: (t: SavedTracksResponse) => ItemResponse[] = flow(prop('items'), takeLeft(2))
+const tryGetPlaylists = (token: string): TaskEither<Error | Errors, GetPlaylistsResponse> =>
+  tryGetDecode([() => getPlaylists(token), GetPlaylistsResponseV])
 
-const get5Artists: (savedTracks: SavedTracksResponse) => ArtistResponse[] = flow(
-  get5Items,
-  amap(item => item.track.artists[0])
-)
+const tryGetPlaylistTracks = (playlistId: string) => (token: string): TaskEither<Error | Errors, GetPlaylistTracksResponse> =>
+  tryGetDecode([() => getPlaylistTracks(playlistId)(token), GetPlaylistTracksResponseV])
 
-const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> => pipe(
-  fromThunk(async () => await getSavedTracks(token)),
-  chainEitherKW(getSavedTracksResponse.decode)
-)
+const tryGetProfile = (token: string): TaskEither<Error | Errors, GetProfileResponse> =>
+  tryGetDecode([() => getProfile(token), GetProfileResponseV])
 
-const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> => pipe(
-  fromThunk(async () => await getSeveralArtists(ids)(token)),
-  chainEitherKW(getSeveralArtistsResponseV.decode)
-)
+const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> => 
+  tryGetDecode([() => getSavedTracks(token), GetSavedTracksResponseV])
+
+const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> => 
+  tryGetDecode([() => getSeveralArtists(ids)(token), GetSeveralArtistsResponseV])
+
+const getImageFromAlbum: (a: Album) => string = flow(prop('images'), images => images[1].url)
+
+const trackToSong = ({ name, artists, album, preview_url }: Track): Either<string, Song> => 
+  preview_url === null 
+    ? left("This track can't be converted to a Song.") 
+    : right(({
+      name, 
+      author: artists[0].name,
+      audio: new Audio(preview_url), 
+      imageUrl: getImageFromAlbum(album) 
+    }))
 
 export const getRecommendations = (token: string): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
   Do,
@@ -96,19 +151,46 @@ export const getRecommendations = (token: string): TaskEither<Error | Errors, Re
     ap(of<any, string>(token)),
     chain(promise => fromThunk(async () => await promise))
   )),
-  chainEitherKW(getRecommendationsResponse.decode)
+  chainEitherKW(GetRecommendationsResponseV.decode)
 )
 
 export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = flow(
   getRecommendations,
   temap(flow(
     prop('tracks'),
-    filter(({ preview_url }) => typeof preview_url === 'string'),
-    amap(({ name, preview_url, album, artists }) => ({
-      name,
-      author: artists[0].name,
-      audio: new Audio(preview_url as string),
-      imageUrl: album.images[1].url
-    }))
+    amap(trackToSong),
+    getValidationMonoid()
   ))
 )
+
+const createUserFromAPI = (x: GetProfileResponse) => (pts: GetPlaylistTracksResponse): User => ({
+  id: x.id,
+  name: x.display_name,
+  playlists: []
+})
+
+const getPlaylistsAndTracks = (token: string): TaskEither<Error | Errors, GetPlaylistTracksResponse[]> => pipe(
+  tryGetPlaylists(token),
+  chain(flow(
+    prop('items'),
+    amap(({ id }) => tryGetPlaylistTracks(id)(token)),
+    sequence(taskEither)
+  ))
+)
+
+export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe(
+  tryGetProfile(token),
+  temap(createUserFromAPI),
+  ap(tryGetPlaylists(token))
+)
+
+// export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe(
+//   Do,
+//   bind('profile', () => tryGetProfile(token)),
+//   bind('playlists', ({ profile }) => tryGetPlaylists(profile.id)(token)),
+//   temap(({ profile, playlists }) => ({
+//     id: profile.id,
+//     name: profile.display_name,
+//     playlists: playlists.items
+//   }))
+// )

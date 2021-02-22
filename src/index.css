@@ -76,12 +76,4 @@
   .min-vh {
     min-height: var(--fullheight);
   }
-
-  .ab {
-    background-color: #09006B;
-  }
-
-  .fr {
-    color: #1931C9;
-  }
 }

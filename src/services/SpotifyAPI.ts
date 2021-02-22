@@ -39,3 +39,13 @@ export const getRecommendedSongs = (seedTracks: string[]) => (seedArtists: strin
   url: `
     https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
 })
+
+export const getPlaylists = newSpotifyRequest({
+  type: 'GET',
+  url: 'https://api.spotify.com/v1/me/playlists'
+})
+
+export const getPlaylistTracks = (playlistId: string) => newSpotifyRequest({
+  type: 'GET',
+  url: `https://api.spotify.com/v1/me/playlists/${playlistId}/tracks?market=UK`
+})
