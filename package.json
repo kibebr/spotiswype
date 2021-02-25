@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^0.3.1",
+    "fp-ts-std": "^0.8.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-swipeable": "^6.0.1"

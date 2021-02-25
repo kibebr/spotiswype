@@ -1,4 +1,4 @@
-import { 
+import {
   map as temap,
   of,
   ap,
@@ -11,12 +11,11 @@ import {
   taskEither,
   TaskEither
 } from 'fp-ts/lib/TaskEither'
-import { map as amap, filter, takeLeft, sequence } from 'fp-ts/lib/Array'
-import { fold } from 'fp-ts/lib/Monoid'
-import { pipe, flow, Lazy } from 'fp-ts/lib/function'
-import { getValidationMonoid, isRight, left, right, Either } from 'fp-ts/lib/Either'
+import { map as amap, chain as achain, takeLeft, sequence, rights, comprehension, zipWith } from 'fp-ts/lib/Array'
+import { pipe, flow } from 'fp-ts/lib/function'
+import { left, right, Either } from 'fp-ts/lib/Either'
 import { Song, User, Playlist } from '../index'
-import { fromThunk, tryGetDecode, rights } from '../utils/FP'
+import { fromThunk, tryGetDecode } from '../utils/FP'
 import {
   getProfile,
   getPlaylists,
@@ -25,46 +24,49 @@ import {
   getSeveralArtists,
   getRecommendedSongs
 } from '../services/SpotifyAPI'
-import { type, string, array, TypeOf, union, null as _null, intersection, Errors } from 'io-ts'
+import { type, string, array, TypeOf, union, null as _null, Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
+import { merge } from 'fp-ts-std/Record'
 
-const ArtistV = type({
+const SpotifyArtistV = type({
   name: string,
   id: string
 })
 
-const AlbumV = type({
+const SpotifyAlbumV = type({
   images: array(type({
     url: string
   }))
 })
 
-const ItemV = type({
+const SpotifyItemV = type({
   track: type({
-    artists: array(ArtistV),
+    artists: array(SpotifyArtistV),
     id: string
   })
 })
 
-const TrackV = type({
-  album: AlbumV,
-  artists: array(ArtistV),
+const SpotifyTrackV = type({
+  album: SpotifyAlbumV,
+  artists: array(SpotifyArtistV),
   id: string,
   name: string,
   preview_url: union([_null, string])
 })
 
-const PlaylistV = type({
+const SpotifyPlaylistV = type({
   id: string,
   name: string
 })
 
 const GetPlaylistTracksResponseV = type({
-  items: array(TrackV)
+  items: array(type({
+    track: SpotifyTrackV
+  }))
 })
 
 const GetPlaylistsResponseV = type({
-  items: array(PlaylistV)
+  items: array(SpotifyPlaylistV)
 })
 
 const GetProfileResponseV = type({
@@ -79,55 +81,55 @@ const GetSeveralArtistsResponseV = type({
 })
 
 const GetSavedTracksResponseV = type({
-  items: array(ItemV)
+  items: array(SpotifyItemV)
 })
 
 const GetRecommendationsResponseV = type({
-  tracks: array(TrackV)
+  tracks: array(SpotifyTrackV)
 })
 
 type GetPlaylistTracksResponse = TypeOf<typeof GetPlaylistTracksResponseV>
 type GetPlaylistsResponse = TypeOf<typeof GetPlaylistsResponseV>
 type GetProfileResponse = TypeOf<typeof GetProfileResponseV>
-type Track = TypeOf<typeof TrackV>
-type Item = TypeOf<typeof ItemV>
-type Artist = TypeOf<typeof ArtistV>
-type Album = TypeOf<typeof AlbumV>
-type SpotifyPlaylist = TypeOf<typeof PlaylistV>
+type SpotifyTrack = TypeOf<typeof SpotifyTrackV>
+type SpotifyItem = TypeOf<typeof SpotifyItemV>
+type SpotifyArtist = TypeOf<typeof SpotifyArtistV>
+type SpotifyAlbum = TypeOf<typeof SpotifyAlbumV>
+type SpotifyPlaylist = TypeOf<typeof SpotifyPlaylistV>
 type SavedTracksResponse = TypeOf<typeof GetSavedTracksResponseV>
 type SeveralArtistsResponse = TypeOf<typeof GetSeveralArtistsResponseV>
 type RecommendationsResponse = TypeOf<typeof GetRecommendationsResponseV>
-type SpotifyPlaylistWithTracks = SpotifyPlaylist & GetPlaylistTracksResponse
+type SpotifyPlaylistWithTracks = SpotifyPlaylist & { tracks: SpotifyTrack[] }
 
-const get5Items: (t: SavedTracksResponse) => Item[] = flow(prop('items'), takeLeft(2))
+const get5Items: (t: SavedTracksResponse) => SpotifyItem[] = flow(prop('items'), takeLeft(2))
 
-const get5Artists: (savedTracks: SavedTracksResponse) => Artist[] = flow(get5Items, amap(item => item.track.artists[0]))
+const get5Artists: (savedTracks: SavedTracksResponse) => SpotifyArtist[] = flow(get5Items, amap(item => item.track.artists[0]))
 
 const tryGetPlaylists = (token: string): TaskEither<Error | Errors, GetPlaylistsResponse> =>
-  tryGetDecode([() => getPlaylists(token), GetPlaylistsResponseV])
+  tryGetDecode([async () => await getPlaylists(token), GetPlaylistsResponseV])
 
 const tryGetPlaylistTracks = (playlistId: string) => (token: string): TaskEither<Error | Errors, GetPlaylistTracksResponse> =>
-  tryGetDecode([() => getPlaylistTracks(playlistId)(token), GetPlaylistTracksResponseV])
+  tryGetDecode([async () => await getPlaylistTracks(playlistId)(token), GetPlaylistTracksResponseV])
 
 const tryGetProfile = (token: string): TaskEither<Error | Errors, GetProfileResponse> =>
-  tryGetDecode([() => getProfile(token), GetProfileResponseV])
+  tryGetDecode([async () => await getProfile(token), GetProfileResponseV])
 
-const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> => 
-  tryGetDecode([() => getSavedTracks(token), GetSavedTracksResponseV])
+const tryGetSavedTracks = (token: string): TaskEither<Error | Errors, SavedTracksResponse> =>
+  tryGetDecode([async () => await getSavedTracks(token), GetSavedTracksResponseV])
 
-const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> => 
-  tryGetDecode([() => getSeveralArtists(ids)(token), GetSeveralArtistsResponseV])
+const tryGetSeveralArtists = (ids: string[]) => (token: string): TaskEither<Error | Errors, SeveralArtistsResponse> =>
+  tryGetDecode([async () => await getSeveralArtists(ids)(token), GetSeveralArtistsResponseV])
 
-const getImageFromAlbum: (a: Album) => string = flow(prop('images'), images => images[1].url)
+const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'), images => images[1].url)
 
-const trackToSong = ({ name, artists, album, preview_url }: Track): Either<string, Song> => 
-  preview_url === null 
-    ? left("This track can't be converted to a Song.") 
+const trackToSong = ({ name, artists, album, preview_url }: SpotifyTrack): Either<string, Song> =>
+  preview_url === null
+    ? left("This track can't be converted to a Song.")
     : right(({
-      name, 
+      name,
       author: artists[0].name,
-      audio: new Audio(preview_url), 
-      imageUrl: getImageFromAlbum(album) 
+      audio: new Audio(preview_url),
+      imageUrl: getImageFromAlbum(album)
     }))
 
 export const getRecommendations = (token: string): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
@@ -167,25 +169,38 @@ export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = f
   ))
 )
 
-const createPlaylist = ({ id, name, items }: SpotifyPlaylistWithTracks): Playlist => ({
+const createDomainPlaylist = ({ id, name, tracks }: SpotifyPlaylistWithTracks): Playlist => ({
   id,
   name,
-  songs: pipe(items.map(trackToSong), rights)
+  songs: pipe(tracks.map(trackToSong), rights)
 })
 
-const createUserFromAPI = ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): User => ({
+const createUserFromAPI = ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): any => ({
   id,
   name: display_name,
-  playlists: spts.map(createPlaylist)
+  playlists: spts.map(createDomainPlaylist)
 })
 
-// TODO: use traverse // this is wrong, it doesnt get playlist with the tracks. only returns the tracks after returning the playlist
-const getUserPlaylistsWithTracks = (token: string): TaskEither<Error | Errors, GetPlaylistTracksResponse[]> => pipe(
+const mergeSpotifyPlaylistAndTracks = (sp: SpotifyPlaylist, trs: SpotifyTrack[]): SpotifyPlaylistWithTracks => ({
+  ...sp,
+  tracks: trs
+})
+
+// const SpotifyPlaylistToPlaylist = (sp: GetPlaylistsResponse)
+
+export const log = <A>(a: A) => {
+  console.log(a)
+  return a
+}
+
+const getUserPlaylistsWithTracks = (token: string): TaskEither<Error | Errors, SpotifyPlaylistWithTracks[]> => pipe(
   tryGetPlaylists(token),
-  chain(flow(
-    prop('items'),
-    amap(({ id }) => tryGetPlaylistTracks(id)(token)),
-    sequence(taskEither)
+  chain(({ items }) => pipe(
+    items.map(({ id }) => tryGetPlaylistTracks(id)(token)),
+    sequence(taskEither),
+    temap(amap(prop('items'))),
+    temap(amap(amap(prop('track')))),
+    temap(tracks => zipWith(items, tracks, mergeSpotifyPlaylistAndTracks))
   ))
 )
 
@@ -197,7 +212,7 @@ export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe
 
 // get profile, get profile id
 // get playlists
-// get 
+// get
 // export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe(
 //   Do,
 //   bind('profile', () => tryGetProfile(token)),

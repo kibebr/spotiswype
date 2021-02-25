@@ -21,9 +21,9 @@ module.exports = {
           800: '#295527',
           900: '#224423'
         },
-        purple: '#05047B',
+        purple: '#09006B',
         'gray-text': '#7F86BD',
-        'purple-strong': '#1D44FE'
+        'purple-strong': '#1931C9'
       },
       cursor: {
         grab: 'grab'

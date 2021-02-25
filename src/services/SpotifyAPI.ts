@@ -21,7 +21,7 @@ const newSpotifyRequest = (settings: { type: HttpRequestType, url: string }) => 
 
 export const getProfile = newSpotifyRequest({
   type: 'GET',
-  url: 'https://api/spotify.com/v1/me'
+  url: 'https://api.spotify.com/v1/me'
 })
 
 export const getSavedTracks = newSpotifyRequest({
@@ -47,5 +47,5 @@ export const getPlaylists = newSpotifyRequest({
 
 export const getPlaylistTracks = (playlistId: string) => newSpotifyRequest({
   type: 'GET',
-  url: `https://api.spotify.com/v1/me/playlists/${playlistId}/tracks?market=UK`
+  url: `https://api.spotify.com/v1/playlists/${playlistId}/tracks?market=ES`
 })

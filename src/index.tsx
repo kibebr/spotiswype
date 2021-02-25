@@ -13,7 +13,10 @@ import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
-import { getUser, getSongs } from './api/spotifyapi'
+import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
+import { isSome } from 'fp-ts/Option'
+import { getUser } from './api/spotifyapi'
+import { pipe } from 'fp-ts/function'
 import { dropRight } from 'fp-ts/lib/Array'
 
 const {
@@ -59,7 +62,7 @@ export default function Home (): JSX.Element {
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
-  const scopes = 'user-read-private, user-library-read'
+  const scopes = 'user-read-private, user-library-read, playlist-read-private, playlist-read-collaborative'
 
   const handlers = useSwipeable({
     onSwiped: (swipeData) => {
@@ -124,13 +127,21 @@ export default function Home (): JSX.Element {
 
   useEffect((): void => {
     document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
-    const hashParams = getHashParams()
+    const maybeToken = pipe(
+      window.location.hash.split('#')[1],
+      fromString,
+      getParam('access_token')
+    )
 
-    if ((hashParams.access_token ?? '') !== '') {
-      setToken(hashParams.access_token)
-
-      getUser(token)()
-      
+    if (isSome(maybeToken)) {
+      getUser(maybeToken.value)()
+        .then(result => {
+          if (isLeft(result)) {
+            console.error(result.left)
+          } else {
+            console.log(result.right)
+          }
+        })
     }
   }, [])
 
@@ -207,7 +218,7 @@ export default function Home (): JSX.Element {
             </a>
             {user !== null && (
               <button
-                onClick={() => setMenuOpen((s) => !s)}
+                onClick={(): void => setMenuOpen((s) => !s)}
                 className="relative hover:text-white text-purple-strong"
               >
                 <StarIcon
@@ -322,3 +333,5 @@ export default function Home (): JSX.Element {
 }
 
 render(<Home />, document.getElementById('root'))
+
+// TODO: let user decide if swiped-right songs will be added to a certain playlist automatically
