@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { rights } from 'fp-ts/lib/Array'
-import { pipe } from 'fp-ts/lib/function'
+import { pipe, constant } from 'fp-ts/lib/function'
 import { left, right, Either } from 'fp-ts/lib/Either'
+import { getOrElse } from 'fp-ts/lib/Option'
 import { Song, User, Playlist, Author } from '../../index'
 import { GetProfileResponse, SpotifyTrack, SpotifyPlaylistWithTracks, SpotifyArtist } from './types'
-import { getImageFromAlbum } from './spotifyapi'
+import { getImageFromAlbum, getImageFromSpotifyPlaylist } from './spotifyapi'
 
 export const spotifyArtistToAuthor = ({ id, name }: SpotifyArtist): Author => ({
   id,
@@ -24,10 +25,11 @@ export const trackToSong = ({ id, name, artists, album, preview_url, external_ur
       link: external_urls.spotify
     }))
 
-export const createDomainPlaylist = ({ id, name, tracks }: SpotifyPlaylistWithTracks): Playlist => ({
-  id,
-  name,
-  songs: pipe(tracks.map(trackToSong), rights)
+export const createDomainPlaylist = (spt: SpotifyPlaylistWithTracks): Playlist => ({
+  id: spt.id,
+  name: spt.name,
+  imageUrl: pipe(getImageFromSpotifyPlaylist(spt), getOrElse(constant(''))),
+  songs: pipe(spt.tracks.map(trackToSong), rights)
 })
 
 export const createUserFromAPI = ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): User => ({

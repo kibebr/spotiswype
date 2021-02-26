@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 
 import React, { useEffect, useState, useRef } from 'react'
-import { Transition } from '@headlessui/react'
 import { render } from 'react-dom'
 import { isLeft } from 'fp-ts/lib/Either'
 import './index.css'
-import { getHashParams } from './utils/HashParams'
-import Footer from './components/Footer'
 import { SongCard } from './components/SongCard'
-import { Card } from './components/Card'
 import { Deck } from './components/Deck'
+import { SliderComponent } from './components/SliderComponent'
+import { PlaylistBox } from './components/PlaylistBox'
+import { PlaylistBoxContainer } from './components/PlaylistBoxContainer'
 import { useSwipeable } from 'react-swipeable'
 import { ReactComponent as StarIcon } from './assets/two-vertical-dots.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
@@ -19,7 +18,7 @@ import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { isSome } from 'fp-ts/Option'
-import { getUser, getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
+import { getUser, getRecommendedFromPlaylist, getImageFromSpotifyPlaylist } from './api/spotify/spotifyapi'
 import { pipe } from 'fp-ts/function'
 import { dropRight } from 'fp-ts/lib/Array'
 
@@ -44,6 +43,7 @@ export interface Song {
 export interface Playlist {
   id: string
   name: string
+  imageUrl?: string
   songs: Song[]
 }
 
@@ -136,37 +136,17 @@ export default function Home (): JSX.Element {
   useEffect((): void => {
     document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
 
-    // setSongs([
-    //   {
-    //     name: 'Little Rain',
-    //     author: 'Morgan Wallen',
-    //     audio: new Audio('whatever'),
-    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-    //   },
-    //   {
-    //     name: 'Beer Can',
-    //     author: 'Luke Combs',
-    //     audio: new Audio('whatever'),
-    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-    //   },
-    //   {
-    //     name: 'Cruise',
-    //     author: 'Florida Georgia Line',
-    //     audio: new Audio('whatever'),
-    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-    //   }
-    // ])
-
     const maybeToken = pipe(
       window.location.hash.split('#')[1],
       fromString,
       getParam('access_token')
     )
 
-    const fetchUserAndSongs = async (token: string) => {
+    const fetchUserAndSongs = async (token: string): Promise<void> => {
       const result = await getUser(token)()
       if (!isLeft(result)) {
         setUser(result.right)
+        console.log(result.right)
         const songs = await getRecommendedFromPlaylist(result.right.playlists[1])(token)()
         if (!isLeft(songs)) {
           setSongs(songs.right)
@@ -234,7 +214,19 @@ export default function Home (): JSX.Element {
 
   return (
     <div className="font-bold text-green-400">
-      <section className="z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
+
+      <div className='absolute z-50 w-full p-5 bg-white rounded-b-lg shadow-md inset-center-x h-64 max-w-screen-sm'>
+        <div>
+          <h2 className='mb-5 text-purple-strong'>Recommend by playlist</h2>
+          <SliderComponent>
+            {user?.playlists.map(playlist => (
+              <PlaylistBoxContainer playlist={playlist} />
+            ))}
+          </SliderComponent>
+        </div>
+      </div>
+
+      <section className="relative flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
         <div className="flex flex-row items-center justify-between align-baseline">
           <a href="http://192.168.0.16:3000">
             <h1 className="mb-2 text-3xl font-bold text-white md:text-3xl rounded-2xl hover:text-white transition-colors">

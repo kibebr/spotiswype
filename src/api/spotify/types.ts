@@ -31,7 +31,10 @@ export const SpotifyTrackV = type({
 
 export const SpotifyPlaylistV = type({
   id: string,
-  name: string
+  name: string,
+  images: array(type({
+    url: string
+  }))
 })
 
 export const GetPlaylistTracksResponseV = type({

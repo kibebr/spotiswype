@@ -11,7 +11,8 @@ import {
   taskEither,
   TaskEither
 } from 'fp-ts/lib/TaskEither'
-import { map as amap, takeLeft, sequence, rights, zipWith } from 'fp-ts/lib/Array'
+import { map as amap, takeLeft, sequence, rights, zipWith, findFirstMap } from 'fp-ts/lib/Array'
+import { fromNullable, Option } from 'fp-ts/lib/Option'
 import { pipe, flow } from 'fp-ts/lib/function'
 import { Playlist, Song, User, Author } from '../../index'
 import {
@@ -46,6 +47,11 @@ export const get5Items: (t: SavedTracksResponse) => SpotifyItem[] = flow(prop('i
 export const get5Artists: (savedTracks: SavedTracksResponse) => SpotifyArtist[] = flow(get5Items, amap(item => item.track.artists[0]))
 
 export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'), images => images[1].url)
+
+export const getImageFromSpotifyPlaylist: (p: SpotifyPlaylist) => Option<string> = flow(
+  prop('images'),
+  findFirstMap(({ url }) => fromNullable(url))
+)
 
 export const getArtistFromSong = (song: Song): Author => song.author
 
@@ -83,6 +89,7 @@ const curried = curry2T(tryGetPlaylistTracks)
 
 const getUserPlaylistsWithTracks = (token: string): TaskEither<Error | Errors, SpotifyPlaylistWithTracks[]> => pipe(
   tryGetPlaylists(token),
+  temap((items) => { console.log(items); return items }),
   chain(({ items }) => pipe(
     items.map(({ id }) => curried(id)(token)),
     sequence(taskEither),
