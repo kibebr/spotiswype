@@ -12,7 +12,7 @@ export const spotifyArtistToAuthor = ({ id, name }: SpotifyArtist): Author => ({
   name
 })
 
-export const trackToSong = ({ id, name, artists, album, preview_url }: SpotifyTrack): Either<string, Song> =>
+export const trackToSong = ({ id, name, artists, album, preview_url, external_urls }: SpotifyTrack): Either<string, Song> =>
   preview_url === null
     ? left("This track can't be converted to a Song.")
     : right(({
@@ -20,7 +20,8 @@ export const trackToSong = ({ id, name, artists, album, preview_url }: SpotifyTr
       name,
       author: pipe(artists[0], spotifyArtistToAuthor),
       audio: new Audio(preview_url),
-      imageUrl: getImageFromAlbum(album)
+      imageUrl: getImageFromAlbum(album),
+      link: external_urls.spotify
     }))
 
 export const createDomainPlaylist = ({ id, name, tracks }: SpotifyPlaylistWithTracks): Playlist => ({

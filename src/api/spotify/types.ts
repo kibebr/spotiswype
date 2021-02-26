@@ -23,7 +23,10 @@ export const SpotifyTrackV = type({
   artists: array(SpotifyArtistV),
   id: string,
   name: string,
-  preview_url: union([_null, string])
+  preview_url: union([_null, string]),
+  external_urls: type({
+    spotify: string
+  })
 })
 
 export const SpotifyPlaylistV = type({

@@ -38,6 +38,7 @@ export interface Song {
   author: Author
   audio: HTMLAudioElement
   imageUrl: string
+  link: string
 }
 
 export interface Playlist {
@@ -52,7 +53,7 @@ export interface User {
   playlists: Playlist[]
 }
 
-type type Preference
+type Preference
   = 'ByLikedSongs'
   | 'ByPlaylist'
 
@@ -303,7 +304,7 @@ export default function Home (): JSX.Element {
           </div>
         )}
 
-  {songs.length === 0 && user !== null && <p>Loading songs...</p>}
+  {songs.length === 0 && user !== null && <p>Getting some new recommended songs for you, just a second...</p>}
 </div>
       </section>
 
