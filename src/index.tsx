@@ -88,10 +88,6 @@ export default function Home (): JSX.Element {
         target.style.transform = `translate(${toX}px, ${toY - deltaY}px) rotate(${rotate}deg)`
         swipe('RIGHT')
       }
-
-      if (swipeBtns.current !== null) {
-        swipeBtns.current.style.transform = swipeBtns.current.style.transform + ' rotate(0deg)'
-      }
     },
     onSwiping: (swipeData) => {
       const target = swipeData.event.target as HTMLElement
@@ -108,10 +104,6 @@ export default function Home (): JSX.Element {
       const rotate = xMulti * yMulti
 
       target.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`
-
-      if (swipeBtns.current !== null) {
-        swipeBtns.current.style.transform = swipeBtns.current.style.transform + ` rotate(${rotate}deg)`
-      }
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
@@ -224,79 +216,77 @@ export default function Home (): JSX.Element {
   return (
     <div className="font-bold text-green-400">
       <section className="z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
-        <div>
-          <div className="flex flex-row items-center justify-between align-baseline">
-            <a href="http://192.168.0.16:3000">
-              <h1 className="mb-2 text-3xl font-bold text-purple-strong md:text-3xl rounded-2xl hover:text-white transition-colors">
-                spotiswype
-              </h1>
-            </a>
-            {user !== null && (
-              <button
-                onClick={(): void => setMenuOpen((s) => !s)}
-                className="relative hover:text-white text-purple-strong"
-              >
-                <StarIcon
-                  className="absolute fill-current transition-colors inset-center"
-                  width={24}
-                  height={24}
-                />
-              </button>
-            )}
-          </div>
-          <div className="flex flex-col justify-between align-baseline">
-            {user === null && (
-              <p className="text-xl font-bold text-gray-400 md:text-1xl">
-                Find songs you'll enjoy by swiping.
-              </p>
-            )}
-          </div>
-          <div>
-            {user !== null && (
-              <button
-                onClick={handleLogin}
-                className="flex flex-row items-center p-2 mt-5 bg-green-400 rounded"
-              >
-                <SpotifyIcon className="mr-2" width="16px" height="16px" />
-                <span className="font-bold text-black">
-                  Log-in with Spotify
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="relative justify-center flex-1 h-full outline-black">
-          {songs.length !== 0 && (
-            <div>
-              <div className='flex justify-center w-full'>
-                <Deck songs={songs} />
-              </div>
-              <div
-                ref={swipeBtns}
-                className="bottom-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto bg-white rounded-full h-14"
-              >
-                <button
-                  onClick={(): void => swipe('LEFT')}
-                  className="p-1 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
-                >
-                  <CrossIcon className="fill-current" width='16px' height='16px' />
-                </button>
-                <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
-                  {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
-                </button>
-                <button
-                  onClick={(): void => swipe('RIGHT')}
-                  className="p-1 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
-                >
-                  <MarkIcon className="fill-current" width='16px' height='16px' />
-                </button>
-              </div>
-            </div>
+        <div className="flex flex-row items-center justify-between align-baseline">
+          <a href="http://192.168.0.16:3000">
+            <h1 className="mb-2 text-3xl font-bold text-purple-strong md:text-3xl rounded-2xl hover:text-white transition-colors">
+              spotiswype
+            </h1>
+          </a>
+          {user !== null && (
+            <button
+              onClick={(): void => setMenuOpen((s) => !s)}
+              className="relative hover:text-white text-purple-strong"
+            >
+              <StarIcon
+                className="absolute fill-current transition-colors inset-center"
+                width={24}
+                height={24}
+              />
+            </button>
           )}
-
-          {songs.length === 0 && user !== null && <p>Loading songs...</p>}
         </div>
+        <div className="flex flex-col justify-between align-baseline">
+          {user !== null && (
+            <p className="text-xl font-bold text-gray-400 md:text-1xl">
+              Find songs you'll enjoy by swiping.
+            </p>
+          )}
+        </div>
+        <div>
+          {user !== null && (
+            <button
+              onClick={handleLogin}
+              className="flex flex-row items-center p-2 mt-5 bg-green-400 rounded"
+            >
+              <SpotifyIcon className="mr-2" width="16px" height="16px" />
+              <span className="font-bold text-black">
+                Log-in with Spotify
+              </span>
+            </button>
+          )}
+      </div>
+
+      <div className="flex justify-center h-full outline-white">
+        {songs.length !== 0 && (
+          <div>
+            <div className='flex justify-center' {...handlers}>
+              <Deck songs={songs} />
+            </div>
+            <div
+              ref={swipeBtns}
+              className="absolute bottom-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 bg-white rounded-full inset-center-x h-14"
+            >
+              <button
+                onClick={(): void => swipe('LEFT')}
+                className="p-1 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
+              >
+                <CrossIcon className="fill-current" width='16px' height='16px' />
+              </button>
+              <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
+                {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
+              </button>
+              <button
+                onClick={(): void => swipe('RIGHT')}
+                className="p-1 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
+              >
+                <MarkIcon className="fill-current" width='16px' height='16px' />
+              </button>
+            </div>
+          </div>
+      )}
+
+  {songs.length === 0 && user !== null && <p>Loading songs...</p>}
+</div>
       </section>
     </div>
   )
