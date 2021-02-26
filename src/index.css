@@ -7,8 +7,10 @@
     --fullheight: calc(var(--vh, 1vh) * 100);
   }
 
-  html {
+  html, body {
     scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-feature-settings: 'kern' 1;
   }
 
   :focus {
@@ -41,7 +43,7 @@
   }
 
   .test {
-    height: 74vh;
+    height: 70vh;
   }
 
   .from-left {

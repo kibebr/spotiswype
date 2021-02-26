@@ -1,16 +1,16 @@
 import React from 'react'
+import { Song } from '../index'
 
 interface SongCardProps {
-  name: string
-  author: string
-  imageUrl: string
+  song: Song
 }
 
-export const SongCard = ({ name, author, imageUrl }: SongCardProps): JSX.Element => (
-  <div className='flex flex-row items-center w-full h-24 p-5 mb-5 text-black bg-gray-300 rounded-lg'>
-    <div className='flex-shrink-0 mr-3 bg-cover rounded-lg w-14 h-14' style={{ backgroundImage: `url(${imageUrl})` }} />
-    <div>
-      {name} by {author}
+export const SongCard = ({ song }: SongCardProps): JSX.Element => (
+  <div className='flex flex-row items-center w-full h-24 p-5 mb-5 text-black rounded-2xl bg-purple-strong'>
+    <div className='flex-shrink-0 mr-3 bg-cover rounded-full w-14 h-14' style={{ backgroundImage: `url(${song.imageUrl})` }} />
+    <div className='flex flex-col'>
+      <span className='text-white'>{song.name}</span>
+      <span className='text-gray-300'>by {song.author}</span>
     </div>
   </div>
 )

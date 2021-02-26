@@ -33,13 +33,13 @@ export interface Song {
   imageUrl: string
 }
 
-export type Playlist = {
+export interface Playlist {
   id: string
   name: string
   songs: Song[]
 }
 
-export type User = {
+export interface User {
   id: string
   name: string
   playlists: Playlist[]
@@ -86,7 +86,7 @@ export default function Home (): JSX.Element {
         const rotate = xMulti * yMulti
 
         target.style.transform = `translate(${toX}px, ${toY - deltaY}px) rotate(${rotate}deg)`
-        swipe('RIGHT')
+        swipe(toX > 0 ? 'RIGHT' : 'LEFT')
       }
     },
     onSwiping: (swipeData) => {
@@ -124,22 +124,22 @@ export default function Home (): JSX.Element {
 
     setSongs([
       {
-        name: 'a song',
-        author: 'some author',
+        name: 'Little Rain',
+        author: 'Morgan Wallen',
         audio: new Audio('whatever'),
-        imageUrl: 'whatever'
+        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
       },
       {
-        name: 'a song',
-        author: 'some author',
+        name: 'Beer Can',
+        author: 'Luke Combs',
         audio: new Audio('whatever'),
-        imageUrl: 'whatever'
+        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
       },
       {
-        name: 'a song',
-        author: 'some author',
+        name: 'Cruise',
+        author: 'Florida Georgia Line',
         audio: new Audio('whatever'),
-        imageUrl: 'whatever'
+        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
       }
     ])
 
@@ -218,7 +218,7 @@ export default function Home (): JSX.Element {
       <section className="z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
         <div className="flex flex-row items-center justify-between align-baseline">
           <a href="http://192.168.0.16:3000">
-            <h1 className="mb-2 text-3xl font-bold text-purple-strong md:text-3xl rounded-2xl hover:text-white transition-colors">
+            <h1 className="mb-2 text-3xl font-bold text-white md:text-3xl rounded-2xl hover:text-white transition-colors">
               spotiswype
             </h1>
           </a>
@@ -256,7 +256,7 @@ export default function Home (): JSX.Element {
           )}
       </div>
 
-      <div className="flex justify-center h-full outline-white">
+      <div className="flex justify-center h-full">
         {songs.length !== 0 && (
           <div>
             <div className='flex justify-center' {...handlers}>
@@ -264,29 +264,40 @@ export default function Home (): JSX.Element {
             </div>
             <div
               ref={swipeBtns}
-              className="absolute bottom-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 bg-white rounded-full inset-center-x h-14"
+              className="absolute bottom-0 z-50 flex flex-row items-center justify-between px-5 py-3 bg-white rounded-full w-36 inset-center-x h-14"
             >
-              <button
+            <button
                 onClick={(): void => swipe('LEFT')}
-                className="p-1 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
+                className="p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
               >
                 <CrossIcon className="fill-current" width='16px' height='16px' />
               </button>
-              <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
+              <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='p-1 rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
                 {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
               </button>
               <button
                 onClick={(): void => swipe('RIGHT')}
-                className="p-1 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
+                className="p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
               >
                 <MarkIcon className="fill-current" width='16px' height='16px' />
               </button>
             </div>
           </div>
-      )}
+        )}
 
   {songs.length === 0 && user !== null && <p>Loading songs...</p>}
 </div>
+      </section>
+
+      <section>
+        <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
+          <h2 className='mb-5 text-2xl text-white'>Liked songs</h2>
+          <ul>
+            {savedSongs.map(savedSong => (
+              <SongCard song={savedSong} />
+            ))}
+          </ul>
+        </div>
       </section>
     </div>
   )
