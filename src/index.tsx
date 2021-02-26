@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 import React, { useEffect, useState, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { render } from 'react-dom'
@@ -17,7 +19,7 @@ import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { isSome } from 'fp-ts/Option'
-import { getUser } from './api/spotify/spotifyapi'
+import { getUser, getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
 import { pipe } from 'fp-ts/function'
 import { dropRight } from 'fp-ts/lib/Array'
 
@@ -26,9 +28,14 @@ const {
   REACT_APP_REDIRECT_URI
 } = process.env
 
-export interface Song {
+export interface Author {
+  id: string
   name: string
-  author: string
+}
+export interface Song {
+  id: string
+  name: string
+  author: Author
   audio: HTMLAudioElement
   imageUrl: string
 }
@@ -45,7 +52,7 @@ export interface User {
   playlists: Playlist[]
 }
 
-export type Preference
+type type Preference
   = 'ByLikedSongs'
   | 'ByPlaylist'
 
@@ -109,39 +116,45 @@ export default function Home (): JSX.Element {
     trackMouse: true
   })
 
-  const refresh = (user: User): void => {
-    getSongs(user)()
+  const refresh = (user: User) => (token: string): void => {
+    getRecommendedFromPlaylist(user.playlists[1])(token)()
       .then(result => {
         if (!isLeft(result)) {
-          setSongs(s => result.right.concat(s))
+          setSongs(result.right)
         }
       })
-      .catch(handleError)
+    // getSongs(user)()
+    //   .then(result => {
+    //     if (!isLeft(result)) {
+    //       setSongs(s => result.right.concat(s))
+    //     }
+    //   })
+    //   .catch(handleError)
   }
 
   useEffect((): void => {
     document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
 
-    setSongs([
-      {
-        name: 'Little Rain',
-        author: 'Morgan Wallen',
-        audio: new Audio('whatever'),
-        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-      },
-      {
-        name: 'Beer Can',
-        author: 'Luke Combs',
-        audio: new Audio('whatever'),
-        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-      },
-      {
-        name: 'Cruise',
-        author: 'Florida Georgia Line',
-        audio: new Audio('whatever'),
-        imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
-      }
-    ])
+    // setSongs([
+    //   {
+    //     name: 'Little Rain',
+    //     author: 'Morgan Wallen',
+    //     audio: new Audio('whatever'),
+    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
+    //   },
+    //   {
+    //     name: 'Beer Can',
+    //     author: 'Luke Combs',
+    //     audio: new Audio('whatever'),
+    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
+    //   },
+    //   {
+    //     name: 'Cruise',
+    //     author: 'Florida Georgia Line',
+    //     audio: new Audio('whatever'),
+    //     imageUrl: 'https://media.pitchfork.com/photos/5ffe2cbadc09c7601ddfc11e/1:1/w_600/Morgan%20Wallen%20Dangerous.jpg'
+    //   }
+    // ])
 
     const maybeToken = pipe(
       window.location.hash.split('#')[1],
@@ -149,22 +162,27 @@ export default function Home (): JSX.Element {
       getParam('access_token')
     )
 
+    const fetchUserAndSongs = async (token: string) => {
+      const result = await getUser(token)()
+      if (!isLeft(result)) {
+        setUser(result.right)
+        const songs = await getRecommendedFromPlaylist(result.right.playlists[1])(token)()
+        if (!isLeft(songs)) {
+          setSongs(songs.right)
+        }
+      }
+    }
+
     if (isSome(maybeToken)) {
-      getUser(maybeToken.value)()
-        .then(result => {
-          if (isLeft(result)) {
-            console.error(result.left)
-          } else {
-            console.log(result.right)
-          }
-        })
+      fetchUserAndSongs(maybeToken.value)
     }
   }, [])
 
   useEffect((): void => {
-    if (songs.length === 0 && user !== null) {
-      refresh(user)
-    }
+    // if (songs.length === 0 && user !== null) {
+    //   console.log('called refresh')
+    //   refresh(user)
+    // }
   }, [songs, user])
 
   useEffect((): void => {
@@ -236,14 +254,14 @@ export default function Home (): JSX.Element {
           )}
         </div>
         <div className="flex flex-col justify-between align-baseline">
-          {user !== null && (
+          {user === null && (
             <p className="text-xl font-bold text-gray-400 md:text-1xl">
               Find songs you'll enjoy by swiping.
             </p>
           )}
         </div>
         <div>
-          {user !== null && (
+          {user === null && (
             <button
               onClick={handleLogin}
               className="flex flex-row items-center p-2 mt-5 bg-green-400 rounded"
@@ -264,7 +282,7 @@ export default function Home (): JSX.Element {
             </div>
             <div
               ref={swipeBtns}
-              className="absolute bottom-0 z-50 flex flex-row items-center justify-between px-5 py-3 bg-white rounded-full w-36 inset-center-x h-14"
+              className="absolute bottom-0 z-50 flex flex-row items-center justify-between px-5 py-3 mb-5 bg-white rounded-full w-36 inset-center-x h-14"
             >
             <button
                 onClick={(): void => swipe('LEFT')}

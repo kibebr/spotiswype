@@ -9,16 +9,18 @@ import {
   getPlaylists,
   getPlaylistTracks,
   getSavedTracks,
-  getSeveralArtists
+  getSeveralArtists,
+  getRecommendedSongs
 } from '../../services/SpotifyAPI'
 import {
   GetPlaylistsResponseV,
   GetPlaylistTracksResponseV,
   GetProfileResponseV,
+  GetRecommendationsResponseV,
   GetSavedTracksResponseV,
   GetSeveralArtistsResponseV
 } from './types'
-import { uncurry2 } from 'fp-ts-std/Function'
+import { uncurry2, uncurry4 } from 'fp-ts-std/Function'
 
 export const tryGetPlaylists = flow(
   tryCatchK(
@@ -58,4 +60,12 @@ export const tryGetSeveralArtists = flow(
     toError
   ),
   chainEitherKW(GetSeveralArtistsResponseV.decode)
+)
+
+export const tryGetRecommendedSongs = flow(
+  tryCatchK(
+    uncurry4(getRecommendedSongs),
+    toError
+  ),
+  chainEitherKW(GetRecommendationsResponseV.decode)
 )
