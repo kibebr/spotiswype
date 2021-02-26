@@ -6,6 +6,8 @@ import './index.css'
 import { getHashParams } from './utils/HashParams'
 import Footer from './components/Footer'
 import { SongCard } from './components/SongCard'
+import { Card } from './components/Card'
+import { Deck } from './components/Deck'
 import { useSwipeable } from 'react-swipeable'
 import { ReactComponent as StarIcon } from './assets/two-vertical-dots.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
@@ -15,7 +17,7 @@ import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { isSome } from 'fp-ts/Option'
-import { getUser } from './api/spotifyapi'
+import { getUser } from './api/spotify/spotifyapi'
 import { pipe } from 'fp-ts/function'
 import { dropRight } from 'fp-ts/lib/Array'
 
@@ -127,6 +129,28 @@ export default function Home (): JSX.Element {
 
   useEffect((): void => {
     document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
+
+    setSongs([
+      {
+        name: 'a song',
+        author: 'some author',
+        audio: new Audio('whatever'),
+        imageUrl: 'whatever'
+      },
+      {
+        name: 'a song',
+        author: 'some author',
+        audio: new Audio('whatever'),
+        imageUrl: 'whatever'
+      },
+      {
+        name: 'a song',
+        author: 'some author',
+        audio: new Audio('whatever'),
+        imageUrl: 'whatever'
+      }
+    ])
+
     const maybeToken = pipe(
       window.location.hash.split('#')[1],
       fromString,
@@ -200,15 +224,6 @@ export default function Home (): JSX.Element {
   return (
     <div className="font-bold text-green-400">
       <section className="z-50 flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
-        <Transition
-          show={menuOpen}
-          enter="transition-all duration-1000"
-          enterFrom="max-h-0"
-        >
-          <div className="absolute top-0 z-50 w-full max-h-screen bg-white hinset-center-x max-w-screen-sm">
-            menu!
-          </div>
-        </Transition>
         <div>
           <div className="flex flex-row items-center justify-between align-baseline">
             <a href="http://192.168.0.16:3000">
@@ -237,7 +252,7 @@ export default function Home (): JSX.Element {
             )}
           </div>
           <div>
-            {user === null && (
+            {user !== null && (
               <button
                 onClick={handleLogin}
                 className="flex flex-row items-center p-2 mt-5 bg-green-400 rounded"
@@ -251,81 +266,36 @@ export default function Home (): JSX.Element {
           </div>
         </div>
 
-        <div className="relative flex-1 h-full">
-          {user !== null && songs.length !== 0 && (
-            <div
-              className="flex justify-center w-full text-center transform -translate-y-5"
-              {...handlers}
-            >
-              {songs.map((song, i) => (
-                <div
-                  id={`${i}`}
-                  className={'p-5 absolute card transition-transform flex-shrink-0 bg-cover bg-center cursor-grab test w-11/12 md:w-6/12 bg-red-500 rounded-3xl'}
-                  style={{
-                    transform: `scale(${
-                      (20 - (songs.length - i)) / 20
-                    }) translateY(${30 * (songs.length - i)}px)`,
-                    backgroundImage: `url(${song.imageUrl})`
-                  }}
+        <div className="relative justify-center flex-1 h-full outline-black">
+          {songs.length !== 0 && (
+            <div>
+              <div className='flex justify-center w-full'>
+                <Deck songs={songs} />
+              </div>
+              <div
+                ref={swipeBtns}
+                className="bottom-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto bg-white rounded-full h-14"
+              >
+                <button
+                  onClick={(): void => swipe('LEFT')}
+                  className="p-1 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
                 >
-                  <span className="font-bold">
-                    {song.name} by {song.author}
-                  </span>
-                </div>
-              ))}
-
+                  <CrossIcon className="fill-current" width='16px' height='16px' />
+                </button>
+                <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
+                  {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
+                </button>
+                <button
+                  onClick={(): void => swipe('RIGHT')}
+                  className="p-1 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
+                >
+                  <MarkIcon className="fill-current" width='16px' height='16px' />
+                </button>
+              </div>
             </div>
           )}
-          <div
-            ref={swipeBtns}
-            className="bottom-0 z-50 flex flex-row items-center justify-between w-32 px-5 py-3 m-0 m-auto bg-white rounded-full h-14"
-          >
-            <button
-              onClick={() => swipe('LEFT')}
-              className="p-1 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
-            >
-              <CrossIcon className="fill-current" width='16px' height='16px' />
-            </button>
-            <button onClick={() => toggleAudio(songs[songs.length - 1])} className='rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
-              {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
-            </button>
-            <button
-              onClick={() => swipe('RIGHT')}
-              className="p-1 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
-            >
-              <MarkIcon className="fill-current" width='16px' height='16px' />
-            </button>
-          </div>
+
           {songs.length === 0 && user !== null && <p>Loading songs...</p>}
-        </div>
-
-        <Transition
-          show={Boolean(error)}
-          enter="transition-opacity duration-500"
-          enterFrom="opacity-0"
-        >
-          <div className="absolute flex items-center justify-center top-8 md:right-8">
-            <div className="flex items-center justify-start w-9/12 p-4 font-bold text-red-800 bg-red-300 rounded-lg h-14">
-              {error}
-            </div>
-          </div>
-        </Transition>
-      </section>
-
-      <section
-        id="likedsongs-section"
-        className="hidden w-full min-h-full bg-white fr transition-all"
-      >
-        <div className="p-4 m-0 m-auto md:py-8 max-w-screen-sm">
-          <h2 className="mb-5 text-3xl font-bold">Liked songs</h2>
-          <ul>
-            {savedSongs.map((s) => (
-              <SongCard name={s.name} author={s.author} imageUrl={s.imageUrl} />
-            ))}
-          </ul>
-          {savedSongs.length === 0 && (
-            <p>Songs you swiped right will appear here.</p>
-          )}
         </div>
       </section>
     </div>
