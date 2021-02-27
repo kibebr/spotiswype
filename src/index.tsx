@@ -3,7 +3,6 @@
 import React, { FunctionComponent, useEffect, useState, useRef } from 'react'
 import { render } from 'react-dom'
 import { isLeft } from 'fp-ts/lib/Either'
-import './index.css'
 import { SongCard } from './components/SongCard'
 import { Deck } from './components/Deck'
 import { SliderComponent } from './components/SliderComponent'
@@ -16,17 +15,16 @@ import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
-import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
-import { isSome } from 'fp-ts/Option'
-import { getUser, getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
-import { pipe } from 'fp-ts/function'
+import { getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
 import { dropRight } from 'fp-ts/lib/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
+import './index.css'
 
 export interface Author {
   id: string
   name: string
 }
+
 export interface Song {
   id: string
   name: string
@@ -66,13 +64,18 @@ const defaultFilter: SearchFilter = {
   bpm: 0
 }
 
+const defaultPreference: Preference = {
+  tag: 'LikedSongs',
+  filter: defaultFilter
+}
+
 const Home: FunctionComponent = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [user, setUser] = useState<User | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
-  const [preference, setPreference] = useState<Preference>({ tag: 'LikedSongs', filter: defaultFilter })
+  const [preference, setPreference] = useState<Preference>(defaultPreference)
   const [error, setError] = useState<string>('')
 
   const swipeBtns = useRef<HTMLDivElement>(null)
@@ -121,15 +124,18 @@ const Home: FunctionComponent = () => {
   })
 
   const refresh = async (user: User): Promise<void> => {
-    console.log('refreshed')
-    await getRecommendedFromPlaylist(user.playlists[1])(user)()
-      .then(result => {
-        if (!isLeft(result)) {
-          setSongs(result.right)
-        } else {
-          console.log(result.left)
-        }
-      })
+    if (preference.tag === 'LikedSongs') {
+      console.error('Cannot find by liked songs for now.')
+    } else if (preference.tag === 'Playlist') {
+      getRecommendedFromPlaylist(preference.playlist)(user)()
+        .then(result => {
+          if (!isLeft(result)) {
+            setSongs(result.right)
+          } else {
+            console.error(result.left)
+          }
+        })
+    }
   }
 
   useEffect((): void => {
@@ -140,7 +146,6 @@ const Home: FunctionComponent = () => {
 
       if (!isLeft(response)) {
         setUser(response.right)
-        console.log(response.right)
       }
     }
 
@@ -149,17 +154,9 @@ const Home: FunctionComponent = () => {
 
   useEffect((): void => {
     if (user !== null && songs.length === 0) {
-      const _refresh = async (): Promise<void> => { await refresh(user) }
-      _refresh()
+      refresh(user)
     }
-  }, [user])
-
-  useEffect((): void => {
-    // if (songs.length === 0 && user !== null) {
-    //   console.log('called refresh')
-    //   refresh(user)
-    // }
-  }, [songs, user])
+  }, [user, songs])
 
   useEffect((): void => {
     if (songPlaying && songs.length >= 1) {
@@ -170,6 +167,20 @@ const Home: FunctionComponent = () => {
         })
     }
   }, [songs])
+
+  useEffect((): void => {
+    if (user !== null) {
+      if (preference.tag === 'Playlist') {
+        if (preference.playlist.songs.length === 0) {
+          setError('This playlist seems empty!')
+          return
+        }
+      }
+
+      refresh(user)
+      setSongs([])
+    }
+  }, [preference])
 
   const swipe = (dir: SwipeDirection): void => {
     if (dir === 'RIGHT' && songs.length !== 0) {
@@ -196,23 +207,28 @@ const Home: FunctionComponent = () => {
     }
   }
 
+  const selectPlaylist = (playlist: Playlist): void => {
+    console.log(playlist.name)
+    setMenuOpen(false)
+  }
+
   return (
     <div className="font-bold text-green-400">
 
       {menuOpen && (
-        <div className='absolute z-50 w-full h-64 p-5 bg-white rounded-b-lg shadow-md inset-center-x max-w-screen-sm'>
+        <div className='absolute z-50 w-full h-64 px-4 bg-white rounded-b-lg shadow-md py-7 md:py-8 inset-center-x max-w-screen-sm'>
           <button
-            className='absolute text-white bg-gray-300 rounded-full w-7 h-7 top-5 right-2'
+            className='absolute p-1 text-white bg-red-500 rounded-full w-7 h-7 top-7 md:top-8 right-2'
             onClick={(): void => setMenuOpen(false)}
           >
-          X
+            <CrossIcon className='absolute fill-current inset-center' width={16} height={16} />
           </button>
           <div>
-            <h2 className='mb-5 text-purple-strong'>Recommend by playlist</h2>
+            <h2 className='mb-3 text-purple-strong'>Recommend by playlist</h2>
             <SliderComponent>
               {user?.playlists.map(playlist => (
                 <PlaylistBoxContainer playlistName={playlist.name}>
-                  <PlaylistBox playlist={playlist} onClick={(): void => console.log('test')}/>
+                  <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))}/>
                 </PlaylistBoxContainer>
               ))}
             </SliderComponent>
@@ -221,7 +237,7 @@ const Home: FunctionComponent = () => {
       )}
 
       <section className="relative flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
-        <div className="flex flex-row items-center justify-between align-start">
+        <div className="relative flex flex-row items-center justify-between align-start">
           <a href="http://192.168.0.16:3000">
             <h1 className="mb-2 text-3xl font-bold text-white md:text-3xl hover:text-white transition-colors">
               spotiswype
@@ -229,11 +245,11 @@ const Home: FunctionComponent = () => {
           </a>
           {user !== null && (
             <button
-              onClick={(): void => setMenuOpen((s) => !s)}
-              className="hover:text-white text-purple-strong"
+              onClick={(): void => setMenuOpen(true)}
+              className="relative w-5 h-7 hover:text-white text-purple-strong"
             >
               <StarIcon
-                className="absolute fill-current transition-colors inset-center"
+                className="absolute top-0 fill-current transition-colors inset-center-x"
                 width={24}
                 height={24}
               />
