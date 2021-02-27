@@ -24,9 +24,7 @@ import {
   tryGetRecommendedSongs
 } from './getters'
 import {
-  GetRecommendationsResponseV,
   SavedTracksResponse,
-  RecommendationsResponse,
   SpotifyArtist,
   SpotifyAlbum,
   SpotifyItem,
@@ -55,7 +53,7 @@ export const getImageFromSpotifyPlaylist: (p: SpotifyPlaylist) => Option<string>
 
 export const getArtistFromSong = (song: Song): Author => song.author
 
-export const getRecommendedFromPlaylist = (playlist: Playlist) => (token: string): TaskEither<Error | Errors, Song[]> => pipe(
+export const getRecommendedFromPlaylist = (playlist: Playlist) => ({ token }: User): TaskEither<Error | Errors, Song[]> => pipe(
   playlist,
   prop('songs'),
   takeLeft(3),
@@ -101,7 +99,7 @@ const getUserPlaylistsWithTracks = (token: string): TaskEither<Error | Errors, S
 
 export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe(
   tryGetProfile(token),
-  temap(createUserFromAPI),
+  temap(createUserFromAPI(token)),
   ap(getUserPlaylistsWithTracks(token))
 )
 

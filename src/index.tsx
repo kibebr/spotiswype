@@ -18,7 +18,7 @@ import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { isSome } from 'fp-ts/Option'
-import { getUser, getRecommendedFromPlaylist, getImageFromSpotifyPlaylist } from './api/spotify/spotifyapi'
+import { getUser, getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
 import { pipe } from 'fp-ts/function'
 import { dropRight } from 'fp-ts/lib/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
@@ -44,6 +44,7 @@ export interface Playlist {
 }
 
 export interface User {
+  token: string
   id: string
   name: string
   playlists: Playlist[]
@@ -67,7 +68,6 @@ const defaultFilter: SearchFilter = {
 
 const Home: FunctionComponent = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
-  const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
@@ -120,20 +120,16 @@ const Home: FunctionComponent = () => {
     trackMouse: true
   })
 
-  const refresh = (user: User) => (token: string): void => {
-    getRecommendedFromPlaylist(user.playlists[1])(token)()
+  const refresh = async (user: User): Promise<void> => {
+    console.log('refreshed')
+    await getRecommendedFromPlaylist(user.playlists[1])(user)()
       .then(result => {
         if (!isLeft(result)) {
           setSongs(result.right)
+        } else {
+          console.log(result.left)
         }
       })
-    // getSongs(user)()
-    //   .then(result => {
-    //     if (!isLeft(result)) {
-    //       setSongs(s => result.right.concat(s))
-    //     }
-    //   })
-    //   .catch(handleError)
   }
 
   useEffect((): void => {
@@ -144,11 +140,19 @@ const Home: FunctionComponent = () => {
 
       if (!isLeft(response)) {
         setUser(response.right)
+        console.log(response.right)
       }
     }
 
     run()
   }, [])
+
+  useEffect((): void => {
+    if (user !== null && songs.length === 0) {
+      const _refresh = async (): Promise<void> => { await refresh(user) }
+      _refresh()
+    }
+  }, [user])
 
   useEffect((): void => {
     // if (songs.length === 0 && user !== null) {
@@ -269,34 +273,38 @@ const Home: FunctionComponent = () => {
                 className="p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
               >
                 <CrossIcon className="fill-current" width='16px' height='16px' />
-              </button>
-              <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='p-1 rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
-                {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
-              </button>
-              <button
+            </button>
+            <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='p-1 rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
+              {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
+            </button>
+            <button
                 onClick={(): void => swipe('RIGHT')}
                 className="p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
               >
-                <MarkIcon className="fill-current" width='16px' height='16px' />
-              </button>
-            </div>
+              <MarkIcon className="fill-current" width='16px' height='16px' />
+            </button>
           </div>
+        </div>
         )}
 
-  {songs.length === 0 && user !== null && <p>Getting some new recommended songs for you, just a second...</p>}
-</div>
-      </section>
-
-      <section>
-        <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
-          <h2 className='mb-5 text-2xl text-white'>Liked songs</h2>
-          <ul>
-            {savedSongs.map(savedSong => (
-              <SongCard song={savedSong} />
-            ))}
-          </ul>
+      {songs.length === 0 && user !== null && (
+        <p>Just a second {user.name}, we are looking for songs you might like...</p>
+      )}
         </div>
       </section>
+
+      {user !== null && (
+        <section>
+          <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
+            <h2 className='mb-5 text-2xl text-white'>Liked songs</h2>
+            <ul>
+              {savedSongs.map(savedSong => (
+                <SongCard song={savedSong} />
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

@@ -32,7 +32,8 @@ export const createDomainPlaylist = (spt: SpotifyPlaylistWithTracks): Playlist =
   songs: pipe(spt.tracks.map(trackToSong), rights)
 })
 
-export const createUserFromAPI = ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): User => ({
+export const createUserFromAPI = (token: string) => ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): User => ({
+  token,
   id,
   name: display_name,
   playlists: spts.map(createDomainPlaylist)
