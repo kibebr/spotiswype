@@ -3,14 +3,15 @@ import { PlaylistBox } from './PlaylistBox'
 import { Playlist } from '../index'
 
 interface PlaylistBoxContainerProps {
-  playlist: Playlist
+  playlistName: string
+  children: React.ReactNode
 }
 
-export const PlaylistBoxContainer = ({ playlist }: PlaylistBoxContainerProps): JSX.Element => {
+export const PlaylistBoxContainer = ({ playlistName, children }: PlaylistBoxContainerProps): JSX.Element => {
   return (
     <div className='text-center'>
-      <PlaylistBox playlist={playlist} />
-      <h3 className='text-black'>{playlist.name}</h3>
+      {children}
+      <h3 className='text-black'>{playlistName}</h3>
     </div>
   )
 }

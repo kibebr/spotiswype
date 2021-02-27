@@ -1,17 +1,19 @@
-import React from 'react'
+import React, { FunctionComponent } from 'react'
 import { Playlist } from '../index'
 
 interface PlaylistBoxProps {
   playlist: Playlist
+  onClick: () => unknown
 }
 
-export const PlaylistBox = ({ playlist }: PlaylistBoxProps): JSX.Element => {
+export const PlaylistBox: FunctionComponent<PlaylistBoxProps> = ({ playlist, onClick }) => {
   return (
     <button
-      className='flex-1 flex-shrink-0 shadow-lg bg-gray-300 bg-center bg-cover rounded-lg w-36 h-36'
+      className='flex-1 flex-shrink-0 bg-gray-300 bg-center bg-cover rounded-lg shadow-lg w-36 h-36 hover:opacity-80 transition-opacity'
       style={{
         ...(playlist.imageUrl !== '' && { backgroundImage: `url(${playlist.imageUrl})` })
       }}
+      onClick={onClick}
     >
     </button>
   )

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { FunctionComponent } from 'react'
 import Slider from 'react-slick'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
@@ -10,13 +10,12 @@ interface SlickProps {
 const slickSettings = {
   infinite: false,
   draggable: true,
-  slidesToShow: 3
+  slidesToShow: 3,
+  className: 'cursor-grab'
 }
 
-export const SliderComponent = ({ children }: SlickProps): JSX.Element => {
-  return (
-    <Slider {...slickSettings}>
-      {children}
-    </Slider>
-  )
-}
+export const SliderComponent: FunctionComponent<SlickProps> = ({ children }) => (
+  <Slider {...slickSettings}>
+    {children}
+  </Slider>
+)
