@@ -14,7 +14,7 @@ export const Deck = ({ songs }: DeckProps): JSX.Element => {
           id={`${songs.length - 1}`}
           song={song}
           style={{
-            transform: `scale(${((100 - ((songs.length - 1) - i) * 10) / 100)}) translateY(${((songs.length - 1) - i) * 20}px)`
+            transform: `scale(${((100 - ((songs.length - 1) - i) * 10) / 100)}) translateY(${((songs.length - 1) - i) * 50}px)`
           }}
         />
       ))}

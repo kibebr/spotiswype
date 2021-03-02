@@ -9,7 +9,7 @@
 
   html, body {
     scroll-behavior: smooth;
-    text-rendering: optimizeLegibility;
+    -webkit-text-rendering: optimizeLegibility;
     -webkit-font-feature-settings: 'kern' 1;
   }
 
@@ -43,7 +43,7 @@
   }
 
   .test {
-    height: 70vh;
+    height: 88%;
   }
 
   .from-left {

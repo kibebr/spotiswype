@@ -49,3 +49,8 @@ export const getPlaylistTracks = (playlistId: string) => newSpotifyRequest({
   type: 'GET',
   url: `https://api.spotify.com/v1/playlists/${playlistId}/tracks?market=ES`
 })
+
+export const getFeaturedPlaylists = newSpotifyRequest({
+  type: 'GET',
+  url: 'https://api.spotify.com/v1/browse/featured-playlists'
+})

@@ -7,8 +7,9 @@ import { SongCard } from './components/SongCard'
 import { Deck } from './components/Deck'
 import { SliderComponent } from './components/SliderComponent'
 import { PlaylistBox } from './components/PlaylistBox'
+import { LoadingIndicator } from './components/LoadingIndicator'
 import { PlaylistBoxContainer } from './components/PlaylistBoxContainer'
-import { ReactComponent as StarIcon } from './assets/two-vertical-dots.svg'
+import { ReactComponent as Sliders } from './assets/filter-circle.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
@@ -18,6 +19,7 @@ import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/
 import { dropRight } from 'fp-ts/lib/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
 import { createSwipeable } from './swipehandler'
+import { usePalette } from 'react-palette'
 import './index.css'
 
 export interface Author {
@@ -79,6 +81,8 @@ const Home: FunctionComponent = () => {
   const [error, setError] = useState<string>('')
 
   const swipeBtns = useRef<HTMLDivElement>(null)
+
+  const { data } = usePalette(songs[songs.length - 1]?.imageUrl)
 
   const refresh = async (user: User): Promise<void> => {
     if (preference.tag === 'LikedSongs') {
@@ -142,6 +146,7 @@ const Home: FunctionComponent = () => {
           console.error(err)
         })
     }
+
   }, [songs])
 
   useEffect((): void => {
@@ -181,10 +186,10 @@ const Home: FunctionComponent = () => {
   }
 
   return (
-    <div className="font-bold text-green-400">
+    <div className="font-bold transition-colors" style={{ backgroundColor: data?.lightVibrant as string }}>
 
       {menuOpen && (
-        <div className='absolute z-50 w-full h-64 px-4 bg-white rounded-b-lg shadow-md py-7 md:py-8 inset-center-x max-w-screen-sm'>
+        <div className='absolute z-50 w-full h-52 px-4 bg-white rounded-b-lg shadow-md py-3 inset-center-x max-w-screen-sm'>
           <button
             className='absolute p-1 text-white bg-red-500 rounded-full w-7 h-7 top-7 md:top-8 right-2'
             onClick={(): void => setMenuOpen(false)}
@@ -192,37 +197,21 @@ const Home: FunctionComponent = () => {
             <CrossIcon className='absolute fill-current inset-center' width={16} height={16} />
           </button>
           <div>
-            <h2 className='mb-3 text-purple-strong'>Recommend by playlist</h2>
-            <SliderComponent>
-              {user?.playlists.map(playlist => (
-                <PlaylistBoxContainer playlistName={playlist.name}>
-                  <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))}/>
-                </PlaylistBoxContainer>
-              ))}
-            </SliderComponent>
+            <h2 className='mb-3 text-xl text-black'>Filter by</h2>
           </div>
         </div>
       )}
 
-      <section className="relative flex flex-col px-4 m-0 m-auto min-vh py-7 md:py-8 max-w-screen-sm">
-        <div className="relative flex flex-row items-center justify-between align-start">
+      <section className="relative flex flex-col px-4 py-3 m-0 m-auto min-vh max-w-screen-sm">
+        <div className="relative flex flex-row items-center justify-between">
           <a href="http://192.168.0.16:3000">
-            <h1 className="mb-2 text-3xl font-bold text-white md:text-3xl hover:text-white transition-colors">
-              spotiswype
+            <h1 className="mb-2 text-3xl font-bold text-black md:text-3xl hover:text-white transition-colors">
+              Spotiswype
             </h1>
           </a>
-          {user !== null && (
-            <button
-              onClick={(): void => setMenuOpen(true)}
-              className="relative w-5 h-7 hover:text-white text-purple-strong"
-            >
-              <StarIcon
-                className="absolute top-0 fill-current transition-colors inset-center-x"
-                width={24}
-                height={24}
-              />
-            </button>
-          )}
+          <button onClick={(): void => setMenuOpen(true)} className='relative w-10 h-10 bg-blur text-black rounded-full'>
+            <Sliders className='w-5 h-5 fill-current absolute inset-center' />
+          </button>
         </div>
         {user === null && (
           <div className="flex flex-col">
@@ -232,7 +221,7 @@ const Home: FunctionComponent = () => {
 
               <button
                 onClick={handleLogin}
-                className="flex flex-row items-center p-2 mt-5 bg-green-400 rounded"
+                className="flex flex-row items-center justify-center p-2 mt-5 bg-green-400 rounded w-44"
               >
                 <SpotifyIcon className="mr-2" width="16px" height="16px" />
                 <span className="font-bold text-black">
@@ -250,7 +239,7 @@ const Home: FunctionComponent = () => {
             </div>
             <div
               ref={swipeBtns}
-              className="absolute bottom-0 z-50 flex flex-row items-center justify-between px-5 py-3 mb-5 bg-white rounded-full w-36 inset-center-x h-14"
+              className="absolute bottom-12 z-50 flex flex-row items-center justify-between px-5 py-3 mb-5 bg-white rounded-full w-36 inset-center-x h-14"
             >
             <button
                 onClick={(): void => swipe('LEFT')}
@@ -272,22 +261,38 @@ const Home: FunctionComponent = () => {
         )}
 
       {songs.length === 0 && user !== null && (
-        <p>Just a second {user.name}, we are looking for songs you might like...</p>
+        <div className='absolute inset-center'>
+          <LoadingIndicator />
+        </div>
       )}
         </div>
       </section>
 
       {user !== null && (
-        <section>
-          <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
-            <h2 className='mb-5 text-2xl text-white'>Liked songs</h2>
-            <ul>
-              {savedSongs.map(savedSong => (
-                <SongCard song={savedSong} />
-              ))}
-            </ul>
-          </div>
-        </section>
+        <>
+          <section>
+            <div className='max-w-screen-sm px-4 m-0 m-auto'>
+              <h2 className='mb-5 text-2xl text-black'>Recommend by</h2>
+              <ul>
+                {user.playlists.map((playlist) => (
+                  <PlaylistBoxContainer playlistName={playlist.name}>
+                    <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))} />
+                  </PlaylistBoxContainer>
+                ))}
+              </ul>
+            </div>
+          </section>
+          <section>
+            <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
+              <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
+              <ul>
+                {savedSongs.map(savedSong => (
+                  <SongCard song={savedSong} />
+                ))}
+              </ul>
+            </div>
+          </section>
+        </>
       )}
     </div>
   )

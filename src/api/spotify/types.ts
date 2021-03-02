@@ -40,6 +40,10 @@ export const GetPlaylistTracksResponseV = type({
   }))
 })
 
+export const GetFeaturedPlaylistsResponseV = type({
+  playlists: array(SpotifyPlaylistV)
+})
+
 export const GetPlaylistsResponseV = type({
   items: array(SpotifyPlaylistV)
 })

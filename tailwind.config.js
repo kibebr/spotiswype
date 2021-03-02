@@ -6,9 +6,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Archivo', ...defaultTheme.fontFamily.sans]
+        // sans: ['Poppins', ...defaultTheme.fontFamily.sans]
       },
       colors: {
+        black: '#111',
         green: {
           50: '#f6f9f6',
           100: '#eef7eb',
@@ -21,7 +22,7 @@ module.exports = {
           800: '#295527',
           900: '#224423'
         },
-        purple: '#09006B',
+        purple: 'white',
         'gray-text': '#7F86BD',
         'purple-strong': '#1931C9'
       },
