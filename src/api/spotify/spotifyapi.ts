@@ -5,7 +5,7 @@ import {
   taskEither,
   TaskEither
 } from 'fp-ts/lib/TaskEither'
-import { map as amap, takeLeft, sequence, rights, zipWith, findFirstMap, head } from 'fp-ts/lib/Array'
+import { map as amap, sequence, rights, zipWith, findFirstMap } from 'fp-ts/lib/Array'
 import { fromNullable, Option } from 'fp-ts/lib/Option'
 import { pipe, flow } from 'fp-ts/lib/function'
 import { Playlist, Song, User, Author } from '../../index'
@@ -17,10 +17,8 @@ import {
   tryGetRecommendedSongs
 } from './getters'
 import {
-  SavedTracksResponse,
   SpotifyArtist,
   SpotifyAlbum,
-  SpotifyItem,
   SpotifyTrack,
   SpotifyPlaylist,
   SpotifyPlaylistWithTracks
@@ -35,10 +33,6 @@ import { prop } from 'fp-ts-ramda'
 import { unsafeHead, randomElements } from '../../utils/array'
 
 const curriedTryGetPlaylistTracks = curry2T(tryGetPlaylistTracks)
-
-export const get5Items: (t: SavedTracksResponse) => SpotifyItem[] = flow(prop('items'), takeLeft(2))
-
-export const get5Artists: (savedTracks: SavedTracksResponse) => SpotifyArtist[] = flow(get5Items, amap(item => item.track.artists[0]))
 
 export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'), images => images[1].url)
 
