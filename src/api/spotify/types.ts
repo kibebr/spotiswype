@@ -11,13 +11,6 @@ export const SpotifyAlbumV = type({
   }))
 })
 
-export const SpotifyItemV = type({
-  track: type({
-    artists: array(SpotifyArtistV),
-    id: string
-  })
-})
-
 export const SpotifyTrackV = type({
   album: SpotifyAlbumV,
   artists: array(SpotifyArtistV),
@@ -27,6 +20,10 @@ export const SpotifyTrackV = type({
   external_urls: type({
     spotify: string
   })
+})
+
+export const SpotifyItemV = type({
+  track: SpotifyTrackV
 })
 
 export const SpotifyPlaylistV = type({

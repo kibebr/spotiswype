@@ -1,23 +1,16 @@
 import {
   map as temap,
-  of,
   ap,
   chain,
-  chainEitherKW,
-  chainW,
-  apW,
-  Do,
-  bind,
   taskEither,
   TaskEither
 } from 'fp-ts/lib/TaskEither'
-import { map as amap, takeLeft, sequence, rights, zipWith, findFirstMap } from 'fp-ts/lib/Array'
+import { map as amap, takeLeft, sequence, rights, zipWith, findFirstMap, head } from 'fp-ts/lib/Array'
 import { fromNullable, Option } from 'fp-ts/lib/Option'
 import { pipe, flow } from 'fp-ts/lib/function'
 import { Playlist, Song, User, Author } from '../../index'
 import {
   tryGetSavedTracks,
-  tryGetSeveralArtists,
   tryGetPlaylists,
   tryGetProfile,
   tryGetPlaylistTracks,
@@ -39,6 +32,9 @@ import {
 import { Errors } from 'io-ts'
 import { curry2T } from 'fp-ts-std/Function'
 import { prop } from 'fp-ts-ramda'
+import { unsafeHead, randomElements } from '../../utils/array'
+
+const curriedTryGetPlaylistTracks = curry2T(tryGetPlaylistTracks)
 
 export const get5Items: (t: SavedTracksResponse) => SpotifyItem[] = flow(prop('items'), takeLeft(2))
 
@@ -56,7 +52,7 @@ export const getArtistFromSong = (song: Song): Author => song.author
 export const getRecommendedFromPlaylist = (playlist: Playlist) => ({ token }: User): TaskEither<Error | Errors, Song[]> => pipe(
   playlist,
   prop('songs'),
-  takeLeft(3),
+  randomElements(5),
   amap(flow(
     getArtistFromSong,
     prop('id')
@@ -69,30 +65,17 @@ export const getRecommendedFromPlaylist = (playlist: Playlist) => ({ token }: Us
   ))
 )
 
-// export const getSongs: (token: string) => TaskEither<Error | Errors, Song[]> = flow(
-//   getRecommendations,
-//   temap(flow(
-//     prop('tracks'),
-//     amap(trackToSong),
-//     rights
-//   ))
-// )
-
 const mergeSpotifyPlaylistAndTracks = (sp: SpotifyPlaylist, trs: SpotifyTrack[]): SpotifyPlaylistWithTracks => ({
   ...sp,
   tracks: trs
 })
 
-const curried = curry2T(tryGetPlaylistTracks)
-
 const getUserPlaylistsWithTracks = (token: string): TaskEither<Error | Errors, SpotifyPlaylistWithTracks[]> => pipe(
   tryGetPlaylists(token),
-  temap((items) => { console.log(items); return items }),
   chain(({ items }) => pipe(
-    items.map(({ id }) => curried(id)(token)),
+    items.map(({ id }) => curriedTryGetPlaylistTracks(id)(token)),
     sequence(taskEither),
-    temap(amap(prop('items'))),
-    temap(amap(amap(prop('track')))),
+    temap(amap(flow(prop('items'), amap(prop('track'))))),
     temap(tracks => zipWith(items, tracks, mergeSpotifyPlaylistAndTracks))
   ))
 )
@@ -103,30 +86,18 @@ export const getUser = (token: string): TaskEither<Error | Errors, User> => pipe
   ap(getUserPlaylistsWithTracks(token))
 )
 
-// export const getRecommendations = (token: string): TaskEither<Error | Errors, RecommendationsResponse> => pipe(
-//   Do,
-//   bind('savedTracks', () => tryGetSavedTracks(token)),
-//   chainW(({ savedTracks }) => pipe(
-//     of(getRecommendedSongs),
-//     ap(of(pipe(
-//       get5Items(savedTracks),
-//       amap(flow(prop('track'), prop('id')))
-//     ))),
-//     ap(of(pipe(
-//       get5Artists(savedTracks),
-//       amap(prop('id'))
-//     ))),
-//     apW(pipe(
-//       get5Artists(savedTracks),
-//       amap(prop('id')),
-//       (ids) => tryGetSeveralArtists(ids)(token),
-//       temap(flow(
-//         prop('artists'),
-//         amap(a => a.genres[0])
-//       ))
-//     )),
-//     ap(of<any, string>(token)),
-//     chain(promise => fromThunk(async () => await promise))
-//   )),
-//   chainEitherKW(GetRecommendationsResponseV.decode)
-// )
+const getRandomArtists: (tracks: SpotifyTrack[]) => SpotifyArtist[] = flow(
+  amap(flow(prop('artists'), unsafeHead)),
+  randomElements(5)
+)
+
+export const getRecommendedFromLikedSongs = ({ token }: User): TaskEither<Error | Errors, Song[]> => pipe(
+  token,
+  tryGetSavedTracks,
+  temap(prop('items')),
+  temap(amap(prop('track'))),
+  temap(flow(getRandomArtists, amap(prop('id')))),
+  chain((artists) => tryGetRecommendedSongs([[], artists, [], token])),
+  temap(prop('tracks')),
+  temap(flow(amap(trackToSong), rights))
+)

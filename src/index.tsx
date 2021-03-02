@@ -8,16 +8,16 @@ import { Deck } from './components/Deck'
 import { SliderComponent } from './components/SliderComponent'
 import { PlaylistBox } from './components/PlaylistBox'
 import { PlaylistBoxContainer } from './components/PlaylistBoxContainer'
-import { useSwipeable } from 'react-swipeable'
 import { ReactComponent as StarIcon } from './assets/two-vertical-dots.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
-import { getRecommendedFromPlaylist } from './api/spotify/spotifyapi'
+import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/spotify/spotifyapi'
 import { dropRight } from 'fp-ts/lib/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
+import { createSwipeable } from './swipehandler'
 import './index.css'
 
 export interface Author {
@@ -56,7 +56,7 @@ type Preference
   = { tag: 'LikedSongs', filter: SearchFilter }
   | { tag: 'Playlist', playlist: Playlist, filter: SearchFilter }
 
-type SwipeDirection
+export type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
 
@@ -80,52 +80,17 @@ const Home: FunctionComponent = () => {
 
   const swipeBtns = useRef<HTMLDivElement>(null)
 
-  const handlers = useSwipeable({
-    onSwiped: (swipeData) => {
-      const target = swipeData.event.target as HTMLElement
-      const { absX, deltaX, deltaY, vxvy } = swipeData
-      const moveOutWidth = document.body.clientWidth
-      const shouldKeep = absX < 80 || Math.abs(vxvy[0]) < 0.5
-
-      if (shouldKeep) {
-        target.style.transform = ''
-      } else {
-        const endX = Math.max(Math.abs(vxvy[0]) * moveOutWidth, moveOutWidth)
-        const toX = deltaX > 0 ? endX : -endX
-        const endY = Math.abs(vxvy[1]) * moveOutWidth
-        const toY = deltaY > 0 ? endY : -endY
-
-        const xMulti = deltaX * 0.03
-        const yMulti = deltaY / 80
-        const rotate = xMulti * yMulti
-
-        target.style.transform = `translate(${toX}px, ${toY - deltaY}px) rotate(${rotate}deg)`
-        swipe(toX > 0 ? 'RIGHT' : 'LEFT')
-      }
-    },
-    onSwiping: (swipeData) => {
-      const target = swipeData.event.target as HTMLElement
-
-      if (!target.classList.contains('card') || Number(target.id) !== songs.length - 1) {
-        return
-      }
-
-      target.classList.add('no-transition')
-
-      const { deltaX, deltaY } = swipeData
-      const xMulti = deltaX * 0.03
-      const yMulti = deltaY / 80
-      const rotate = xMulti * yMulti
-
-      target.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`
-    },
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true
-  })
-
   const refresh = async (user: User): Promise<void> => {
     if (preference.tag === 'LikedSongs') {
-      console.error('Cannot find by liked songs for now.')
+      getRecommendedFromLikedSongs(user)()
+        .then(result => {
+          if (!isLeft(result)) {
+            setSongs(result.right)
+          } else {
+            console.error(result.left)
+          }
+        })
+      
     } else if (preference.tag === 'Playlist') {
       getRecommendedFromPlaylist(preference.playlist)(user)()
         .then(result => {
@@ -137,6 +102,17 @@ const Home: FunctionComponent = () => {
         })
     }
   }
+
+  const swipe = (dir: SwipeDirection): void => {
+    if (dir === 'RIGHT' && songs.length !== 0) {
+      setSavedSongs(s => s.concat(songs[songs.length - 1]))
+    }
+
+    songs[songs.length - 1].audio.pause()
+    setSongs(dropRight(1))
+  }
+
+  const swipeHandler = createSwipeable(swipe, songs)
 
   useEffect((): void => {
     document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`)
@@ -158,7 +134,7 @@ const Home: FunctionComponent = () => {
     }
   }, [user, songs])
 
-  useEffect((): void => {
+  useEffect(() => {
     if (songPlaying && songs.length >= 1) {
       songs[songs.length - 1].audio.play()
         .catch(err => {
@@ -177,19 +153,11 @@ const Home: FunctionComponent = () => {
         }
       }
 
+      songs[songs.length - 1]?.audio.pause()
       refresh(user)
       setSongs([])
     }
   }, [preference])
-
-  const swipe = (dir: SwipeDirection): void => {
-    if (dir === 'RIGHT' && songs.length !== 0) {
-      setSavedSongs(s => s.concat(songs[songs.length - 1]))
-    }
-
-    songs[songs.length - 1].audio.pause()
-    setSongs(dropRight(1))
-  }
 
   const handleError = (err: Error): void => {
     console.error(err)
@@ -277,7 +245,7 @@ const Home: FunctionComponent = () => {
       <div className="flex justify-center h-full">
         {songs.length !== 0 && (
           <div>
-            <div className='flex justify-center' {...handlers}>
+            <div className='flex justify-center' {...swipeHandler}>
               <Deck songs={songs} />
             </div>
             <div
