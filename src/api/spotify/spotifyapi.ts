@@ -38,7 +38,7 @@ export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'
 
 export const getImageFromSpotifyPlaylist: (p: SpotifyPlaylist) => Option<string> = flow(
   prop('images'),
-  findFirstMap(({ url }) => fromNullable(url))
+  findFirstMap(flow(prop('url'), fromNullable))
 )
 
 export const getArtistFromSong = (song: Song): Author => song.author
