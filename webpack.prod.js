@@ -6,7 +6,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const TerserWebpackPlugin = require('terser-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
-const BundleAnalyzer = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = merge(common, {
   mode: 'production',
@@ -28,7 +27,6 @@ module.exports = merge(common, {
     }]
   },
   plugins: [
-    new BundleAnalyzer(),
     new ESLintPlugin({
       emitError: true,
       failOnError: true

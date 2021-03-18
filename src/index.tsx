@@ -58,6 +58,10 @@ type Preference
   = { tag: 'LikedSongs', filter: SearchFilter }
   | { tag: 'Playlist', playlist: Playlist, filter: SearchFilter }
 
+type Screen
+  = 'Home'
+  | 'Categories'
+
 export type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
@@ -73,6 +77,7 @@ const defaultPreference: Preference = {
 
 const Home: FunctionComponent = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
+  const [screen, setScreen] = useState<Screen>('Home')
   const [user, setUser] = useState<User | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
@@ -273,11 +278,9 @@ const Home: FunctionComponent = () => {
           <section>
             <div className='max-w-screen-sm px-4 m-0 m-auto'>
               <h2 className='mb-5 text-2xl text-black'>Recommend by</h2>
-              <ul>
+              <ul className='grid gap-2 grid-cols-3 grid-rows-3 items-center'>
                 {user.playlists.map((playlist) => (
-                  <PlaylistBoxContainer playlistName={playlist.name}>
-                    <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))} />
-                  </PlaylistBoxContainer>
+                  <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))} />
                 ))}
               </ul>
             </div>
