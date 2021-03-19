@@ -8,3 +8,4 @@ spotiswype is a website that lets you find brand new songs that match your taste
 
 ## Known bugs
 1. Swiping too fast with a mouse makes the website crash
+2. New songs don't play automatically on Safari (and possibly other mobile browsers as well); this is due to a Safari feature that blocks auto-playing songs
