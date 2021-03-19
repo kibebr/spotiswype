@@ -267,7 +267,11 @@ const Home: FunctionComponent = () => {
               <h2 className='mb-5 text-2xl text-black'>Recommend by</h2>
               <ul className='grid gap-2 grid-cols-3 grid-rows-3 items-center'>
                 {user.playlists.map((playlist) => (
-                  <PlaylistBox playlist={playlist} onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))} />
+                  <PlaylistBox
+                    key={playlist.id}
+                    playlist={playlist}
+                    onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))}
+                  />
                 ))}
               </ul>
             </div>

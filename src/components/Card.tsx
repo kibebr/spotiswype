@@ -25,7 +25,7 @@ export const Card = ({ id, song, style }: CardProps): JSX.Element => {
         <div className='p-3 text-center text-black rounded-lg bg-blur'>
           {song.name} <span className='text-gray-700'>by {song.author.name}</span>
         </div>
-        <div className='flex flex-row mt-auto justify-evenly hidden'>
+        <div className='flex flex-row mt-auto justify-evenly'>
           <div className='relative w-16 h-16 bg-blur rounded-full text-red-500 hover:text-white hover:bg-red-500 transition-colors'>
             <Cross className='absolute inset-center w-8 h-8 fill-current' />
           </div>
