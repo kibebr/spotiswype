@@ -1,13 +1,20 @@
-type HttpRequestType = 'GET' | 'POST'
+type HttpRequestType
+  = 'GET'
+  | 'POST'
 
-const newSpotifyRequest = (settings: { type: HttpRequestType, url: string }) => async (accessToken: string) => await new Promise<unknown>(
+interface Settings {
+  type: HttpRequestType
+  params: string
+}
+
+const newSpotifyRequest = ({ type, params }: Settings) => async (accessToken: string) => await new Promise<unknown>(
   (resolve, reject) => {
     const request = new XMLHttpRequest()
 
-    request.open(settings.type, settings.url)
+    request.open(type, `https://api.spotify.com/v1/${params}`)
     request.setRequestHeader('Authorization', `Bearer ${accessToken}`)
 
-    request.onload = () => {
+    request.onload = (): void => {
       if (request.status >= 400 && request.status <= 500) {
         reject(Error(JSON.parse(request.responseText)))
       } else {
@@ -21,36 +28,35 @@ const newSpotifyRequest = (settings: { type: HttpRequestType, url: string }) => 
 
 export const getProfile = newSpotifyRequest({
   type: 'GET',
-  url: 'https://api.spotify.com/v1/me'
+  params: 'me'
 })
 
 export const getSavedTracks = newSpotifyRequest({
   type: 'GET',
-  url: 'https://api.spotify.com/v1/me/tracks'
+  params: 'me/tracks'
 })
 
 export const getSeveralArtists = (artistsIds: string[]) => newSpotifyRequest({
   type: 'GET',
-  url: `https://api.spotify.com/v1/artists?ids=${artistsIds.join()}`
+  params: `artists?ids=${artistsIds.join()}`
 })
 
 export const getRecommendedSongs = (seedTracks: string[]) => (seedArtists: string[]) => (seedGenres: string[]) => newSpotifyRequest({
   type: 'GET',
-  url: `
-    https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
+  params: `recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
 })
 
 export const getPlaylists = newSpotifyRequest({
   type: 'GET',
-  url: 'https://api.spotify.com/v1/me/playlists'
+  params: 'me/playlists'
 })
 
 export const getPlaylistTracks = (playlistId: string) => newSpotifyRequest({
   type: 'GET',
-  url: `https://api.spotify.com/v1/playlists/${playlistId}/tracks?market=ES`
+  params: `playlists/${playlistId}/tracks?market=ES`
 })
 
 export const getFeaturedPlaylists = newSpotifyRequest({
   type: 'GET',
-  url: 'https://api.spotify.com/v1/browse/featured-playlists'
+  params: 'browse/featured-playlists'
 })

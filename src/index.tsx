@@ -1,19 +1,16 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { render } from 'react-dom'
 import { isLeft } from 'fp-ts/Either'
 import { SongCard } from './components/SongCard'
 import { Container } from './components/Container'
 import { Deck } from './components/Deck'
-import { PlaylistBox } from './components/PlaylistBox'
 import { LoadingIndicator } from './components/LoadingIndicator'
 import { ReactComponent as Sliders } from './assets/filter-circle.svg'
-import { ReactComponent as MarkIcon } from './assets/check.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
-import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
-import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
+import { SwipeButtons } from './components/SwipeButtons'
 import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/spotify/spotifyapi'
 import { dropRight } from 'fp-ts/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
@@ -49,6 +46,10 @@ const defaultPreference: Preference = {
   filter: defaultFilter
 }
 
+type View
+  = 'Swipe'
+  | 'Find'
+
 const Home = (): JSX.Element => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [screen, setScreen] = useState<Screen>('Home')
@@ -59,8 +60,7 @@ const Home = (): JSX.Element => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   const [preference, setPreference] = useState<Preference>(defaultPreference)
   const [error, setError] = useState<string>('')
-
-  const swipeBtns = useRef<HTMLDivElement>(null)
+  const [view, setView] = useState<View>('Find')
 
   const { data } = usePalette(songs[songs.length - 1]?.imageUrl)
 
@@ -176,6 +176,13 @@ const Home = (): JSX.Element => {
     setMenuOpen(false)
   }
 
+  // if (view === 'Find') {
+  //   return (
+  //     <div>
+  //     </div>
+  //   )
+  // }
+
   return (
     <div className="font-bold transition-colors" style={{ backgroundColor: data?.vibrant as string }}>
 
@@ -193,17 +200,20 @@ const Home = (): JSX.Element => {
         </div>
       )}
 
-      <section className="relative flex flex-col px-4 py-3 m-0 m-auto min-vh max-w-screen-md">
+      <section className="relative flex flex-col px-4 py-3 m-0 m-auto max-w-screen-md">
         <div className="relative flex flex-row items-center justify-between">
           <a href="http://192.168.0.16:3000">
-            <h1 className="mb-2 text-3xl font-bold text-black md:text-3xl hover:text-white transition-colors">
-              Spotiswype
+            <h1 className="mb-2 text-3xl font-bold text-black md:text-5xl hover:text-white transition-colors">
+              spotiswype
             </h1>
           </a>
           <button onClick={(): void => setMenuOpen(true)} className='relative w-10 h-10 bg-blur text-black rounded-full'>
             <Sliders className='w-5 h-5 fill-current absolute inset-center' />
           </button>
         </div>
+      </section>
+
+      <section className='min-vh'>
         {user === null && (
           <div className="flex flex-col">
               <p className="text-xl font-bold text-gray-400 md:text-1xl">
@@ -222,59 +232,34 @@ const Home = (): JSX.Element => {
           </div>
         )}
 
-      <div className="flex justify-center h-full">
-        {songs.length !== 0 && (
-          <div>
-            <div className='flex justify-center' {...swipeHandler}>
-              <Deck songs={songs} />
+        <div className="flex justify-center h-full">
+          {songs.length !== 0 && (
+            <div>
+              <div className='flex justify-center' {...swipeHandler}>
+                <Deck songs={songs} />
+              </div>
+              <div className="absolute bottom-12 z-50 mb-5 inset-center-x">
+                <SwipeButtons
+                  isSongPlaying={songPlaying}
+                  onPressPlay={(): void => toggleAudio(songs[songs.length - 1])}
+                  onPressPause={(): void => toggleAudio(songs[songs.length - 1])}
+                  onSwipeRight={(): void => swipe('RIGHT')}
+                  onSwipeLeft={(): void => swipe('LEFT')}
+                />
+              </div>
             </div>
-            <div
-              ref={swipeBtns}
-              className="absolute bottom-12 z-50 flex flex-row items-center justify-between px-5 py-3 mb-5 bg-white rounded-full w-36 inset-center-x h-14"
-            >
-            <button
-                onClick={(): void => swipe('LEFT')}
-                className="p-2 text-red-500 rounded transition-all hover:bg-red-500 hover:text-white"
-              >
-                <CrossIcon className="fill-current" width='16px' height='16px' />
-            </button>
-            <button onClick={(): void => toggleAudio(songs[songs.length - 1])} className='p-1 rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'>
-              {songPlaying ? <PauseIcon width='24px' height='24px' /> : <PlayIcon width='24px' height='24px' />}
-            </button>
-            <button
-                onClick={(): void => swipe('RIGHT')}
-                className="p-2 text-green-500 rounded transition-all hover:bg-green-500 hover:text-white"
-              >
-              <MarkIcon className="fill-current" width='16px' height='16px' />
-            </button>
-          </div>
-        </div>
-        )}
+          )}
 
-      {songs.length === 0 && user !== null && (
-        <div className='absolute inset-center'>
-          <LoadingIndicator />
-        </div>
-      )}
+          {songs.length === 0 && user !== null && (
+            <div className='absolute inset-center'>
+              <LoadingIndicator />
+            </div>
+          )}
         </div>
       </section>
 
       {user !== null && (
         <>
-          <section>
-            <Container>
-              <h2 className='mb-5 text-2xl text-black'>Recommend by</h2>
-              <ul className='grid gap-2 grid-cols-3 grid-rows-3 items-center'>
-                {user.playlists.map((playlist) => (
-                  <PlaylistBox
-                    key={playlist.id}
-                    playlist={playlist}
-                    onClick={(): void => setPreference(p => ({ ...p, tag: 'Playlist', playlist }))}
-                  />
-                ))}
-              </ul>
-            </Container>
-          </section>
           <section>
             <Container>
               <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
