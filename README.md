@@ -3,5 +3,8 @@ spotiswype is a website that lets you find brand new songs that match your taste
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fc235951-4e2a-4f9f-9cc2-dca2926a4b25/deploy-status)](https://app.netlify.com/sites/spotiswype/deploys)
 
+## TODOS
+1. Add a few more tests 😅
+
 ## Known bugs
 1. Swiping too fast with a mouse makes the website crash
