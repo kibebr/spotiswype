@@ -17,12 +17,10 @@ export const Card = ({ id, song, style }: CardProps): JSX.Element => {
       className='absolute cursor-grab flex-shrink-0 w-9/12 max-w-xs p-5 bg-center bg-cover h-5/6 bg-purple-strong card transition-transform md:w-6/12 rounded-3xl'
       style={{
         ...style,
+        backgroundImage: `url(${song.imageUrl})`,
         boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px'
       }}
     >
-      <img src={song.imageUrl} className='bg-red-500 absolute w-full h-full'>
-
-      </img>
       <div className='flex flex-col justify-between h-auto'>
         <div className='p-3 text-center text-black rounded-lg bg-blur'>
           {song.name} <span className='text-gray-700'>by {song.author.name}</span>
