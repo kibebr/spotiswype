@@ -6,7 +6,6 @@ export const createSwipeable = (onSwipe: (d: SwipeDirection) => unknown, songs: 
     const target = event.target as HTMLElement
     const moveOutWidth = document.body.clientWidth
     const shouldKeep = absX < 80 || Math.abs(vxvy[0]) < 0.5
-    console.log('onSwiped: ', absX, deltaX, deltaY, vxvy)
 
     if (shouldKeep) {
       target.style.transform = ''
