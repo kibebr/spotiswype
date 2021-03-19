@@ -99,7 +99,6 @@ const Home: FunctionComponent = () => {
             console.error(result.left)
           }
         })
-      
     } else if (preference.tag === 'Playlist') {
       getRecommendedFromPlaylist(preference.playlist)(user)()
         .then(result => {
@@ -151,7 +150,6 @@ const Home: FunctionComponent = () => {
           console.error(err)
         })
     }
-
   }, [songs])
 
   useEffect((): void => {
