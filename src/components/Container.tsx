@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { FunctionComponent } from 'react'
 
-export const Container = (children: React.ReactNode): JSX.Element => (
-  <div className='p-4 m-0 m-auto md:py-8 max-w-screen-sm'>
+export const Container: FunctionComponent = ({ children }): JSX.Element => (
+  <div className='p-4 m-0 m-auto md:py-8 max-w-screen-md'>
     {children}
   </div>
 )

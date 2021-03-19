@@ -1,9 +1,9 @@
 import {
   chainEitherKW,
   tryCatchK
-} from 'fp-ts/lib/TaskEither'
-import { flow } from 'fp-ts/lib/function'
-import { toError } from 'fp-ts/lib/Either'
+} from 'fp-ts/TaskEither'
+import { flow } from 'fp-ts/function'
+import { toError } from 'fp-ts/Either'
 import {
   getProfile,
   getPlaylists,

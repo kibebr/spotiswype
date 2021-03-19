@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 
-import React, { FunctionComponent, useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { render } from 'react-dom'
-import { isLeft } from 'fp-ts/lib/Either'
+import { isLeft } from 'fp-ts/Either'
 import { SongCard } from './components/SongCard'
+import { Container } from './components/Container'
 import { Deck } from './components/Deck'
-import { SliderComponent } from './components/SliderComponent'
 import { PlaylistBox } from './components/PlaylistBox'
 import { LoadingIndicator } from './components/LoadingIndicator'
-import { PlaylistBoxContainer } from './components/PlaylistBoxContainer'
 import { ReactComponent as Sliders } from './assets/filter-circle.svg'
 import { ReactComponent as MarkIcon } from './assets/check.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
@@ -16,7 +15,7 @@ import { ReactComponent as PlayIcon } from './assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from './assets/pause-fill.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/spotify/spotifyapi'
-import { dropRight } from 'fp-ts/lib/Array'
+import { dropRight } from 'fp-ts/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
 import { createSwipeable } from './swipehandler'
 import { usePalette } from 'react-palette'
@@ -50,7 +49,7 @@ const defaultPreference: Preference = {
   filter: defaultFilter
 }
 
-const Home: FunctionComponent = () => {
+const Home = (): JSX.Element => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [screen, setScreen] = useState<Screen>('Home')
   const [user, setUser] = useState<User | null>(null)
@@ -178,7 +177,7 @@ const Home: FunctionComponent = () => {
   }
 
   return (
-    <div className="font-bold transition-colors" style={{ backgroundColor: data?.lightVibrant as string }}>
+    <div className="font-bold transition-colors" style={{ backgroundColor: data?.vibrant as string }}>
 
       {menuOpen && (
         <div className='absolute z-50 w-full h-52 px-4 bg-white rounded-b-lg shadow-md py-3 inset-center-x max-w-screen-sm'>
@@ -194,7 +193,7 @@ const Home: FunctionComponent = () => {
         </div>
       )}
 
-      <section className="relative flex flex-col px-4 py-3 m-0 m-auto min-vh max-w-screen-sm">
+      <section className="relative flex flex-col px-4 py-3 m-0 m-auto min-vh max-w-screen-md">
         <div className="relative flex flex-row items-center justify-between">
           <a href="http://192.168.0.16:3000">
             <h1 className="mb-2 text-3xl font-bold text-black md:text-3xl hover:text-white transition-colors">
@@ -263,7 +262,7 @@ const Home: FunctionComponent = () => {
       {user !== null && (
         <>
           <section>
-            <div className='max-w-screen-sm px-4 m-0 m-auto'>
+            <Container>
               <h2 className='mb-5 text-2xl text-black'>Recommend by</h2>
               <ul className='grid gap-2 grid-cols-3 grid-rows-3 items-center'>
                 {user.playlists.map((playlist) => (
@@ -274,17 +273,17 @@ const Home: FunctionComponent = () => {
                   />
                 ))}
               </ul>
-            </div>
+            </Container>
           </section>
           <section>
-            <div className='px-4 m-0 m-auto py-7 md:py-8 max-w-screen-sm'>
+            <Container>
               <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
               <ul>
                 {savedSongs.map(savedSong => (
                   <SongCard song={savedSong} />
                 ))}
               </ul>
-            </div>
+            </Container>
           </section>
         </>
       )}

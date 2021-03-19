@@ -4,10 +4,10 @@ import {
   chain,
   taskEither,
   TaskEither
-} from 'fp-ts/lib/TaskEither'
-import { map as amap, sequence, rights, zipWith, findFirstMap } from 'fp-ts/lib/Array'
-import { fromNullable, Option } from 'fp-ts/lib/Option'
-import { pipe, flow } from 'fp-ts/lib/function'
+} from 'fp-ts/TaskEither'
+import { map as amap, sequence, rights, zipWith, findFirstMap } from 'fp-ts/Array'
+import { fromNullable, Option } from 'fp-ts/Option'
+import { pipe, flow } from 'fp-ts/function'
 import { Song } from '../../domain/Song'
 import { User } from '../../domain/User'
 import { Author } from '../../domain/Author'
