@@ -20,35 +20,10 @@ import { dropRight } from 'fp-ts/lib/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
 import { createSwipeable } from './swipehandler'
 import { usePalette } from 'react-palette'
+import { Playlist } from './domain/Playlist'
+import { User } from './domain/User'
+import { Song } from './domain/Song'
 import './index.css'
-
-export interface Author {
-  id: string
-  name: string
-}
-
-export interface Song {
-  id: string
-  name: string
-  author: Author
-  audio: HTMLAudioElement
-  imageUrl: string
-  link: string
-}
-
-export interface Playlist {
-  id: string
-  name: string
-  imageUrl?: string
-  songs: Song[]
-}
-
-export interface User {
-  token: string
-  id: string
-  name: string
-  playlists: Playlist[]
-}
 
 interface SearchFilter {
   bpm: number
@@ -81,7 +56,8 @@ const Home: FunctionComponent = () => {
   const [user, setUser] = useState<User | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
-  const [songPlaying, setSongPlaying] = useState<boolean>(false)
+  const [songPlaying, setSongPlaying] = useState<boolean>(true)
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   const [preference, setPreference] = useState<Preference>(defaultPreference)
   const [error, setError] = useState<string>('')
 
@@ -116,7 +92,7 @@ const Home: FunctionComponent = () => {
       setSavedSongs(s => s.concat(songs[songs.length - 1]))
     }
 
-    songs[songs.length - 1].audio.pause()
+    // songs[songs.length - 1].audio.pause()
     setSongs(dropRight(1))
   }
 
@@ -143,14 +119,25 @@ const Home: FunctionComponent = () => {
   }, [user, songs])
 
   useEffect(() => {
-    if (songPlaying && songs.length >= 1) {
-      songs[songs.length - 1].audio.play()
+    if (audio !== null) {
+      audio.pause()
+    }
+
+    if (songs.length >= 1) {
+      const audio = new Audio(songs[songs.length - 1].audio)
+      setAudio(audio)
+    }
+  }, [songs])
+
+  useEffect((): void => {
+    if (songPlaying && audio !== null) {
+      audio.play()
         .catch(err => {
           setSongPlaying(false)
           console.error(err)
         })
     }
-  }, [songs])
+  }, [audio])
 
   useEffect((): void => {
     if (user !== null) {
@@ -161,7 +148,7 @@ const Home: FunctionComponent = () => {
         }
       }
 
-      songs[songs.length - 1]?.audio.pause()
+      // songs[songs.length - 1]?.audio.pause()
       refresh(user)
       setSongs([])
     }
@@ -172,14 +159,16 @@ const Home: FunctionComponent = () => {
   }
 
   const toggleAudio = (song: Song): void => {
-    if (song.audio.paused) {
-      song.audio.play()
-        .catch(handleError)
+    if (audio !== null) {
+      if (audio.paused) {
+        audio.play()
+          .catch(handleError)
 
-      setSongPlaying(true)
-    } else {
-      song.audio.pause()
-      setSongPlaying(false)
+        setSongPlaying(true)
+      } else {
+        audio.pause()
+        setSongPlaying(false)
+      }
     }
   }
 

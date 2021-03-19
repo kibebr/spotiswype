@@ -1,6 +1,6 @@
 import React from 'react'
 import { Card } from './Card'
-import { Song } from '../index'
+import { Song } from '../domain/Song'
 
 interface DeckProps {
   songs: Song[]

@@ -1,6 +1,6 @@
 import { chain, fromOption, TaskEither } from 'fp-ts/lib/TaskEither'
 import { IO } from 'fp-ts/lib/IO'
-import { User } from '../../index'
+import { User } from '../../domain/User'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { pipe, flow, constant } from 'fp-ts/lib/function'
 import { append } from 'fp-ts-std/String'

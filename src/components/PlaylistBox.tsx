@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react'
-import { Playlist } from '../index'
+import { Playlist } from '../domain/Playlist'
 
 interface PlaylistBoxProps {
   playlist: Playlist

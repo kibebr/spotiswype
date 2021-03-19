@@ -1,6 +1,4 @@
 import React from 'react'
-import { PlaylistBox } from './PlaylistBox'
-import { Playlist } from '../index'
 
 interface PlaylistBoxContainerProps {
   playlistName: string

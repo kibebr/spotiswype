@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react'
 import { ReactComponent as Cross } from '../assets/cross.svg'
-import { Song } from '../index'
+import { Song } from '../domain/Song'
 
 interface SongCardProps {
   song: Song

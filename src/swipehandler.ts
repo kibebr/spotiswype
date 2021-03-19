@@ -1,4 +1,5 @@
-import { SwipeDirection, Song } from './index'
+import { SwipeDirection } from './index'
+import { Song } from './domain/Song'
 import { SwipeableHandlers, useSwipeable } from 'react-swipeable'
 
 export const createSwipeable = (onSwipe: (d: SwipeDirection) => unknown, songs: Song[]): SwipeableHandlers => useSwipeable({

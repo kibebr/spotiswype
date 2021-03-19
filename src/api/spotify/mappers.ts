@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { rights } from 'fp-ts/lib/Array'
-import { pipe, constant } from 'fp-ts/lib/function'
-import { left, right, Either } from 'fp-ts/lib/Either'
-import { getOrElse } from 'fp-ts/lib/Option'
-import { Song, User, Playlist, Author } from '../../index'
+import { map, rights } from 'fp-ts/Array'
+import { pipe, constant } from 'fp-ts/function'
+import { left, right, Either } from 'fp-ts/Either'
+import { getOrElse } from 'fp-ts/Option'
+import { Song } from '../../domain/Song'
+import { User } from '../../domain/User'
+import { Author } from '../../domain/Author'
+import { Playlist } from '../../domain/Playlist'
+import { prop } from 'fp-ts-ramda'
 import { GetProfileResponse, SpotifyTrack, SpotifyPlaylistWithTracks, SpotifyArtist } from './types'
 import { getImageFromAlbum, getImageFromSpotifyPlaylist } from './spotifyapi'
 
@@ -20,7 +24,7 @@ export const trackToSong = ({ id, name, artists, album, preview_url, external_ur
       id,
       name,
       author: pipe(artists[0], spotifyArtistToAuthor),
-      audio: new Audio(preview_url),
+      audio: preview_url,
       imageUrl: getImageFromAlbum(album),
       link: external_urls.spotify
     }))
@@ -28,8 +32,17 @@ export const trackToSong = ({ id, name, artists, album, preview_url, external_ur
 export const createDomainPlaylist = (spt: SpotifyPlaylistWithTracks): Playlist => ({
   id: spt.id,
   name: spt.name,
-  imageUrl: pipe(getImageFromSpotifyPlaylist(spt), getOrElse(constant(''))),
-  songs: pipe(spt.tracks.map(trackToSong), rights)
+  imageUrl: pipe(
+    spt,
+    getImageFromSpotifyPlaylist,
+    getOrElse(constant(''))
+  ),
+  songs: pipe(
+    spt,
+    prop('tracks'),
+    map(trackToSong),
+    rights
+  )
 })
 
 export const createUserFromAPI = (token: string) => ({ id, display_name }: GetProfileResponse) => (spts: SpotifyPlaylistWithTracks[]): User => ({

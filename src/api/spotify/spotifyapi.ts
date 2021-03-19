@@ -8,7 +8,10 @@ import {
 import { map as amap, sequence, rights, zipWith, findFirstMap } from 'fp-ts/lib/Array'
 import { fromNullable, Option } from 'fp-ts/lib/Option'
 import { pipe, flow } from 'fp-ts/lib/function'
-import { Playlist, Song, User, Author } from '../../index'
+import { Song } from '../../domain/Song'
+import { User } from '../../domain/User'
+import { Author } from '../../domain/Author'
+import { Playlist } from '../../domain/Playlist'
 import {
   tryGetSavedTracks,
   tryGetPlaylists,
@@ -34,7 +37,10 @@ import { unsafeHead, randomElements } from '../../utils/array'
 
 const curriedTryGetPlaylistTracks = curry2T(tryGetPlaylistTracks)
 
-export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'), images => images[1].url)
+export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(
+  prop('images'),
+  (images) => images[1].url
+)
 
 export const getImageFromSpotifyPlaylist: (p: SpotifyPlaylist) => Option<string> = flow(
   prop('images'),
