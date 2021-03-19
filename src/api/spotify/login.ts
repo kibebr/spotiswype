@@ -7,10 +7,9 @@ import { append } from 'fp-ts-std/String'
 import { Errors } from 'io-ts'
 import { getUser } from './spotifyapi'
 
-const {
-  REACT_APP_CLIENT_ID,
-  REACT_APP_REDIRECT_URI
-} = process.env
+// can't destruct both at the same... https://github.com/mrsteele/dotenv-webpack/issues/70
+const { REACT_APP_CLIENT_ID } = process.env
+const { REACT_APP_REDIRECT_URI } = process.env
 
 const scopes = 'user-read-private, user-library-read, playlist-read-private, playlist-read-collaborative'
 
