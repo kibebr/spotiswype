@@ -1,5 +1,6 @@
 const webpack = require('webpack')
 const dotenv = require('dotenv')
+const Dotenv = require('dotenv-webpack')
 
 module.exports = {
   entry: './src/index.tsx',
@@ -28,8 +29,8 @@ module.exports = {
     }]
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env': JSON.stringify(dotenv.config().parsed)
+    new Dotenv({
+      systemvars: true
     })
   ]
 }

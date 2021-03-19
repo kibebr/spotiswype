@@ -7,18 +7,14 @@ import { append } from 'fp-ts-std/String'
 import { Errors } from 'io-ts'
 import { getUser } from './spotifyapi'
 
-// can't destruct both at the same... https://github.com/mrsteele/dotenv-webpack/issues/70
-const { REACT_APP_CLIENT_ID } = process.env
-const { REACT_APP_REDIRECT_URI } = process.env
-
 const scopes = 'user-read-private, user-library-read, playlist-read-private, playlist-read-collaborative'
 
 const spotifyCallbackUrl: string = pipe(
   'https://accounts.spotify.com/authorize',
   append('?response_type=token'),
-  append(`&client_id=${encodeURIComponent(REACT_APP_CLIENT_ID as string)}`),
+  append(`&client_id=${encodeURIComponent(process.env.REACT_APP_CLIENT_ID as string)}`),
   append(`&scope=${encodeURIComponent(scopes)}`),
-  append(`&redirect_uri=${encodeURIComponent(REACT_APP_REDIRECT_URI as string)}`)
+  append(`&redirect_uri=${encodeURIComponent(process.env.REACT_APP_REDIRECT_URI as string)}`)
 )
 
 const getWindowHash: IO<string> = () => window.location.hash.split('#')[1]

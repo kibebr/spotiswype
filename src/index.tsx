@@ -89,7 +89,7 @@ const Home: FunctionComponent = () => {
 
   const { data } = usePalette(songs[songs.length - 1]?.imageUrl)
 
-  console.log(process.env)
+  console.log(process.env.REACT_APP_CLIENT_ID)
   const refresh = async (user: User): Promise<void> => {
     if (preference.tag === 'LikedSongs') {
       getRecommendedFromLikedSongs(user)()
