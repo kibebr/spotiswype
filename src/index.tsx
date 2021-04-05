@@ -6,6 +6,7 @@ import { isLeft } from 'fp-ts/Either'
 import { SongCard } from './components/SongCard'
 import { Container } from './components/Container'
 import { Deck } from './components/Deck'
+import { Logo } from './components/Logo'
 import { LoadingIndicator } from './components/LoadingIndicator'
 import { ReactComponent as Sliders } from './assets/filter-circle.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
@@ -91,7 +92,6 @@ const Home = (): JSX.Element => {
       setSavedSongs(s => s.concat(songs[songs.length - 1]))
     }
 
-    // songs[songs.length - 1].audio.pause()
     setSongs(dropRight(1))
   }
 
@@ -176,13 +176,6 @@ const Home = (): JSX.Element => {
     setMenuOpen(false)
   }
 
-  // if (view === 'Find') {
-  //   return (
-  //     <div>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="font-bold transition-colors" style={{ backgroundColor: data?.vibrant as string }}>
 
@@ -202,20 +195,16 @@ const Home = (): JSX.Element => {
 
       <section className="relative flex flex-col px-4 py-3 m-0 m-auto max-w-screen-md">
         <div className="relative flex flex-row items-center justify-between">
-          <a href="http://192.168.0.16:3000">
-            <h1 className="mb-2 text-3xl font-bold text-black md:text-5xl hover:text-white transition-colors">
-              spotiswype
-            </h1>
+          <a href='/'>
+            <Logo />
           </a>
-          <button onClick={(): void => setMenuOpen(true)} className='relative w-10 h-10 bg-blur text-black rounded-full'>
-            <Sliders className='w-5 h-5 fill-current absolute inset-center' />
-          </button>
         </div>
       </section>
 
-      <section className='min-vh'>
-        {user === null && (
-          <div className="flex flex-col">
+      <section className='min-vh p-4'>
+        <Container>
+          {user === null && (
+            <div className="flex flex-col">
               <p className="text-xl font-bold text-gray-400 md:text-1xl">
                 Find songs you'll enjoy by swiping.
               </p>
@@ -229,33 +218,34 @@ const Home = (): JSX.Element => {
                   Log-in with Spotify
                 </span>
               </button>
+            </div>
+          )}
+
+          <div className="flex justify-center h-full">
+            {songs.length !== 0 && (
+              <div>
+                <div className='flex justify-center' {...swipeHandler}>
+                  <Deck songs={songs} />
+                </div>
+                <div className="absolute bottom-12 z-50 mb-5 inset-center-x">
+                  <SwipeButtons
+                    isSongPlaying={songPlaying}
+                    onPressPlay={(): void => toggleAudio(songs[songs.length - 1])}
+                    onPressPause={(): void => toggleAudio(songs[songs.length - 1])}
+                    onSwipeRight={(): void => swipe('RIGHT')}
+                    onSwipeLeft={(): void => swipe('LEFT')}
+                  />
+                </div>
+              </div>
+            )}
+
+            {songs.length === 0 && user !== null && (
+              <div className='absolute inset-center'>
+                <LoadingIndicator />
+              </div>
+            )}
           </div>
-        )}
-
-        <div className="flex justify-center h-full">
-          {songs.length !== 0 && (
-            <div>
-              <div className='flex justify-center' {...swipeHandler}>
-                <Deck songs={songs} />
-              </div>
-              <div className="absolute bottom-12 z-50 mb-5 inset-center-x">
-                <SwipeButtons
-                  isSongPlaying={songPlaying}
-                  onPressPlay={(): void => toggleAudio(songs[songs.length - 1])}
-                  onPressPause={(): void => toggleAudio(songs[songs.length - 1])}
-                  onSwipeRight={(): void => swipe('RIGHT')}
-                  onSwipeLeft={(): void => swipe('LEFT')}
-                />
-              </div>
-            </div>
-          )}
-
-          {songs.length === 0 && user !== null && (
-            <div className='absolute inset-center'>
-              <LoadingIndicator />
-            </div>
-          )}
-        </div>
+        </Container>
       </section>
 
       {user !== null && (

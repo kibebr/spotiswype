@@ -7,7 +7,7 @@ interface Settings {
   params: string
 }
 
-const newSpotifyRequest = ({ type, params }: Settings) => async (accessToken: string) => await new Promise<unknown>(
+const newSpotifyRequest = ({ type, params }: Settings) => async (accessToken: string): Promise<unknown> => await new Promise<unknown>(
   (resolve, reject) => {
     const request = new XMLHttpRequest()
 
