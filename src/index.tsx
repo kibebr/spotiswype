@@ -199,7 +199,7 @@ const Home = (): JSX.Element => {
         </div>
       </section>
 
-      <section className='min-vh'>
+      <section className='min-vh px-2 md:px-0'>
         <Container>
           {user === null && (
             <div className="flex flex-col">
@@ -247,7 +247,7 @@ const Home = (): JSX.Element => {
       </section>
 
       {user !== null && savedSongs.length > 0 && (
-        <section className='pb-3'>
+        <section className='pb-3 px-2 md:px-0'>
           <Container>
             <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
             <ul>
