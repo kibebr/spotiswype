@@ -16,9 +16,6 @@ export const SongCard: FunctionComponent<SongCardProps> = ({ song }) => {
           <span className='text-gray-500'>by {song.author.name}</span>
         </div>
       </a>
-      <button className='relative flex-shrink-0 w-10 h-10 ml-auto rounded-full md:w-12 md:h-12 bg-red-600 text-white transition-colors hover:animate-bounce'>
-        <Cross className='absolute w-5 h-5 fill-current inset-center'/>
-      </button>
     </div>
   )
 }
