@@ -6,7 +6,6 @@ import { isLeft } from 'fp-ts/Either'
 import { SongCard } from './components/SongCard'
 import { Container } from './components/Container'
 import { Deck } from './components/Deck'
-import { Logo } from './components/Logo'
 import { LoadingIndicator } from './components/LoadingIndicator'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
@@ -191,10 +190,10 @@ const Home = (): JSX.Element => {
         </div>
       )}
 
-      <section className="relative flex flex-col px-2 py-3 m-0 m-auto max-w-screen-md">
+      <section className="relative flex flex-col px-2 md:px-0 py-3 m-0 m-auto max-w-screen-md">
         <div className="relative flex flex-row items-center justify-between">
           <a href='/'>
-            <Logo />
+            <h1 className='text-4xl'>Spotiswype</h1>
           </a>
         </div>
       </section>
