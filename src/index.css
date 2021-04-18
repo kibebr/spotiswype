@@ -8,6 +8,7 @@
   }
 
   html, body {
+    height: 100%;
     scroll-behavior: smooth;
     -webkit-text-rendering: optimizeLegibility;
     -webkit-font-feature-settings: 'kern' 1;

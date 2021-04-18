@@ -8,7 +8,6 @@ import { Container } from './components/Container'
 import { Deck } from './components/Deck'
 import { Logo } from './components/Logo'
 import { LoadingIndicator } from './components/LoadingIndicator'
-import { ReactComponent as Sliders } from './assets/filter-circle.svg'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
 import { SwipeButtons } from './components/SwipeButtons'
@@ -177,8 +176,7 @@ const Home = (): JSX.Element => {
   }
 
   return (
-    <div className="font-bold transition-colors" style={{ backgroundColor: data?.vibrant as string }}>
-
+    <div className='font-bold transition-colors outline-black' style={{ backgroundColor: data?.vibrant as string }}>
       {menuOpen && (
         <div className='absolute z-50 w-full h-52 px-4 bg-white rounded-b-lg shadow-md py-3 inset-center-x max-w-screen-sm'>
           <button
@@ -193,7 +191,7 @@ const Home = (): JSX.Element => {
         </div>
       )}
 
-      <section className="relative flex flex-col px-4 py-3 m-0 m-auto max-w-screen-md">
+      <section className="relative flex flex-col px-2 py-3 m-0 m-auto max-w-screen-md">
         <div className="relative flex flex-row items-center justify-between">
           <a href='/'>
             <Logo />
@@ -201,7 +199,7 @@ const Home = (): JSX.Element => {
         </div>
       </section>
 
-      <section className='min-vh p-4'>
+      <section className='min-vh'>
         <Container>
           {user === null && (
             <div className="flex flex-col">
@@ -248,19 +246,17 @@ const Home = (): JSX.Element => {
         </Container>
       </section>
 
-      {user !== null && (
-        <>
-          <section>
-            <Container>
-              <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
-              <ul>
-                {savedSongs.map(savedSong => (
-                  <SongCard song={savedSong} />
-                ))}
-              </ul>
-            </Container>
-          </section>
-        </>
+      {user !== null && savedSongs.length > 0 && (
+        <section className='pb-3'>
+          <Container>
+            <h2 className='mb-5 text-2xl text-black'>Liked songs</h2>
+            <ul>
+              {savedSongs.map(savedSong => (
+                <SongCard song={savedSong} />
+              ))}
+            </ul>
+          </Container>
+        </section>
       )}
     </div>
   )
