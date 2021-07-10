@@ -1,7 +1,8 @@
-export const randomElements = (n: number) => <T>(arr: T[]): T[] =>
-  arr
-    .sort(() => Math.random() - Math.random())
-    .slice(0, n)
-  
-export const unsafeHead = <T>(arr: T[]): T => arr[0]
+import { flow } from 'fp-ts/function'
+import { sort, takeLeft } from 'fp-ts/ReadonlyArray'
 
+export const randomElements = (n: number): <T>(arr: readonly T[]) => readonly T[] => flow(
+  takeLeft(5)
+)
+
+export const unsafeHead = <T>(arr: readonly T[]): T => arr[0]

@@ -1,9 +1,5 @@
-import {
-  chainEitherKW,
-  tryCatchK
-} from 'fp-ts/TaskEither'
-import { flow } from 'fp-ts/function'
-import { toError } from 'fp-ts/Either'
+import { chainEitherKW } from 'fp-ts/ReaderTaskEither'
+import { pipe, flow } from 'fp-ts/function'
 import {
   getProfile,
   getPlaylists,
@@ -22,60 +18,40 @@ import {
   GetSeveralArtistsResponseV,
   GetFeaturedPlaylistsResponseV
 } from './types'
-import { uncurry2, uncurry4 } from 'fp-ts-std/Function'
+import { uncurry4 } from 'fp-ts-std/Function'
 
-export const tryGetPlaylists = flow(
-  tryCatchK(
-    getPlaylists,
-    toError
-  ),
+export const tryGetPlaylists = pipe(
+  getPlaylists,
   chainEitherKW(GetPlaylistsResponseV.decode)
 )
 
 export const tryGetPlaylistTracks = flow(
-  tryCatchK(
-    uncurry2(getPlaylistTracks),
-    toError
-  ),
+  getPlaylistTracks,
   chainEitherKW(GetPlaylistTracksResponseV.decode)
 )
 
-export const tryGetProfile = flow(
-  tryCatchK(
-    getProfile,
-    toError
-  ),
+export const tryGetProfile = pipe(
+  getProfile,
   chainEitherKW(GetProfileResponseV.decode)
 )
 
-export const tryGetSavedTracks = flow(
-  tryCatchK(
-    getSavedTracks,
-    toError
-  ),
+export const tryGetSavedTracks = pipe(
+  getSavedTracks,
   chainEitherKW(GetSavedTracksResponseV.decode)
 )
 
 export const tryGetSeveralArtists = flow(
-  tryCatchK(
-    uncurry2(getSeveralArtists),
-    toError
-  ),
+  getSeveralArtists,
   chainEitherKW(GetSeveralArtistsResponseV.decode)
 )
 
-export const tryGetRecommendedSongs = flow(
-  tryCatchK(
-    uncurry4(getRecommendedSongs),
-    toError
-  ),
+export const tryGetRecommendedSongs = pipe(
+  getRecommendedSongs,
+  uncurry4,
   chainEitherKW(GetRecommendationsResponseV.decode)
 )
 
-export const tryGetFeaturedPlaylists = flow(
-  tryCatchK(
-    getFeaturedPlaylists,
-    toError
-  ),
+export const tryGetFeaturedPlaylists = pipe(
+  getFeaturedPlaylists,
   chainEitherKW(GetFeaturedPlaylistsResponseV.decode)
 )

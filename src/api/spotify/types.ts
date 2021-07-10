@@ -1,4 +1,4 @@
-import { type, string, array, TypeOf, union, null as _null } from 'io-ts'
+import { type, readonly, string, readonlyArray, TypeOf, union, null as _null } from 'io-ts'
 
 export const SpotifyArtistV = type({
   name: string,
@@ -6,14 +6,14 @@ export const SpotifyArtistV = type({
 })
 
 export const SpotifyAlbumV = type({
-  images: array(type({
+  images: readonlyArray(type({
     url: string
   }))
 })
 
 export const SpotifyTrackV = type({
   album: SpotifyAlbumV,
-  artists: array(SpotifyArtistV),
+  artists: readonlyArray(SpotifyArtistV),
   id: string,
   name: string,
   preview_url: union([_null, string]),
@@ -29,23 +29,23 @@ export const SpotifyItemV = type({
 export const SpotifyPlaylistV = type({
   id: string,
   name: string,
-  images: array(type({
+  images: readonlyArray(type({
     url: string
   }))
 })
 
 export const GetPlaylistTracksResponseV = type({
-  items: array(type({
+  items: readonlyArray(type({
     track: SpotifyTrackV
   }))
 })
 
 export const GetFeaturedPlaylistsResponseV = type({
-  playlists: array(SpotifyPlaylistV)
+  playlists: readonlyArray(SpotifyPlaylistV)
 })
 
 export const GetPlaylistsResponseV = type({
-  items: array(SpotifyPlaylistV)
+  items: readonlyArray(SpotifyPlaylistV)
 })
 
 export const GetProfileResponseV = type({
@@ -54,17 +54,17 @@ export const GetProfileResponseV = type({
 })
 
 export const GetSeveralArtistsResponseV = type({
-  artists: array(type({
-    genres: array(string)
+  artists: readonlyArray(type({
+    genres: readonlyArray(string)
   }))
 })
 
 export const GetSavedTracksResponseV = type({
-  items: array(SpotifyItemV)
+  items: readonlyArray(SpotifyItemV)
 })
 
 export const GetRecommendationsResponseV = type({
-  tracks: array(SpotifyTrackV)
+  tracks: readonlyArray(SpotifyTrackV)
 })
 
 export type GetPlaylistTracksResponse = TypeOf<typeof GetPlaylistTracksResponseV>
@@ -78,4 +78,4 @@ export type SpotifyPlaylist = TypeOf<typeof SpotifyPlaylistV>
 export type SavedTracksResponse = TypeOf<typeof GetSavedTracksResponseV>
 export type SeveralArtistsResponse = TypeOf<typeof GetSeveralArtistsResponseV>
 export type RecommendationsResponse = TypeOf<typeof GetRecommendationsResponseV>
-export type SpotifyPlaylistWithTracks = SpotifyPlaylist & { tracks: SpotifyTrack[] }
+export type SpotifyPlaylistWithTracks = SpotifyPlaylist & { tracks: readonly SpotifyTrack[] }

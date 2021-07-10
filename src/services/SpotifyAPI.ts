@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/promise-function-async */
+import { toError } from 'fp-ts/Either'
+import { tryCatch } from 'fp-ts/TaskEither'
+import { ReaderTaskEither } from 'fp-ts/ReaderTaskEither'
+
+type SpotifyAccessToken = string
+
 type HttpRequestType
   = 'GET'
   | 'POST'
@@ -7,23 +14,14 @@ interface Settings {
   params: string
 }
 
-const newSpotifyRequest = ({ type, params }: Settings) => async (accessToken: string): Promise<unknown> => await new Promise<unknown>(
-  (resolve, reject) => {
-    const request = new XMLHttpRequest()
-
-    request.open(type, `https://api.spotify.com/v1/${params}`)
-    request.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-
-    request.onload = (): void => {
-      if (request.status >= 400 && request.status <= 500) {
-        reject(Error(JSON.parse(request.responseText)))
-      } else {
-        resolve(JSON.parse(request.responseText))
-      }
+const newSpotifyRequest = ({ type, params }: Settings): ReaderTaskEither<SpotifyAccessToken, Error, unknown> => (accessToken) => tryCatch(
+  () => fetch(`https://api.spotify.com/v1/${params}`, {
+    method: type,
+    headers: {
+      Authorization: `Bearer ${accessToken}`
     }
-
-    request.send()
-  }
+  }),
+  toError
 )
 
 export const getProfile = newSpotifyRequest({
@@ -36,15 +34,19 @@ export const getSavedTracks = newSpotifyRequest({
   params: 'me/tracks'
 })
 
-export const getSeveralArtists = (artistsIds: string[]) => newSpotifyRequest({
+export const getSeveralArtists = (artistsIds: readonly string[]) => newSpotifyRequest({
   type: 'GET',
   params: `artists?ids=${artistsIds.join()}`
 })
 
-export const getRecommendedSongs = (seedTracks: string[]) => (seedArtists: string[]) => (seedGenres: string[]) => newSpotifyRequest({
-  type: 'GET',
-  params: `recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
-})
+export const getRecommendedSongs =
+  (seedTracks: readonly string[]) =>
+    (seedArtists: readonly string[]) =>
+      (seedGenres: readonly string[]) =>
+        newSpotifyRequest({
+          type: 'GET',
+          params: `recommendations?seed_tracks=${seedTracks.join()}&seed_artists=${seedArtists.join()}&seedGenres=${seedGenres.join().replace(' ', '+')}`
+        })
 
 export const getPlaylists = newSpotifyRequest({
   type: 'GET',
