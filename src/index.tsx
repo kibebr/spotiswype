@@ -7,6 +7,7 @@ import * as RA from 'fp-ts/ReadonlyArray'
 import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
+import * as Eq from 'fp-ts/Eq'
 import { ADT, matchI } from 'ts-adt'
 import { render } from 'react-dom'
 import { SongCard } from './components/SongCard'
@@ -26,6 +27,8 @@ import { User, getTokenFromUser } from './domain/User'
 import { Song } from './domain/Song'
 import './index.css'
 
+const ioVoid: IO.IO<void> = () => {}
+
 export type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
@@ -34,9 +37,10 @@ interface HomeProps {
   playSong: (song: Song) => IO.IO<void>
   resume: IO.IO<void>
   pause: IO.IO<void>
+  toggle: IO.IO<void>
 }
 
-const Home = ({ playSong }: HomeProps): JSX.Element => {
+const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
   const [preference] = useState<ADT<{
@@ -55,6 +59,8 @@ const Home = ({ playSong }: HomeProps): JSX.Element => {
   )
 
   useEffect(() => {
+    F.pipe(songs, RA.head, O.fold(F.constant(ioVoid), playSong))()
+
     if (songs.length <= 0 && O.isSome(user)) {
       loadSongs().then(E.fold(console.error, setSongs))
     }
@@ -89,6 +95,10 @@ const Home = ({ playSong }: HomeProps): JSX.Element => {
       <button onClick={handleLogin}>
         Log-in
       </button>
+
+      <button onClick={toggle}>
+        Play
+      </button>
     </div>
   )
 }
@@ -117,7 +127,6 @@ const AudioManager = (): JSX.Element => {
 
     if (O.isSome(currentSong)) {
       setAudio(O.some(new Audio(currentSong.value.audio)))
-      setIsPlaying(true)
     }
   }, [currentSong])
 
@@ -127,6 +136,7 @@ const AudioManager = (): JSX.Element => {
         playSong={(song) => () => setCurrentSong(O.some(song))}
         resume={() => setIsPlaying(true)}
         pause={() => setIsPlaying(false)}
+        toggle={() => setIsPlaying(!isPlaying)}
       />
     </>
   )
