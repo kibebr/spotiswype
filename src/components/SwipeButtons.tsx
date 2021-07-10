@@ -3,19 +3,19 @@ import { ReactComponent as CrossIcon } from '../assets/cross.svg'
 import { ReactComponent as PlayIcon } from '../assets/play-fill.svg'
 import { ReactComponent as PauseIcon } from '../assets/pause-fill.svg'
 import { ReactComponent as MarkIcon } from '../assets/check.svg'
+import { Song } from '../domain/Song'
+import * as IO from 'fp-ts/IO'
 
 interface SwipeButtonsProps {
-  isSongPlaying: boolean
-  onPressPlay: MouseEventHandler
-  onPressPause: MouseEventHandler
-  onSwipeRight: () => unknown
-  onSwipeLeft: () => unknown
+  isPlaying: boolean
+  toggle: IO.IO<void>
+  onSwipeRight: IO.IO<void>
+  onSwipeLeft: IO.IO<void>
 }
 
 export const SwipeButtons = ({
-  isSongPlaying,
-  onPressPlay,
-  onPressPause,
+  isPlaying,
+  toggle,
   onSwipeRight,
   onSwipeLeft
 }: SwipeButtonsProps): JSX.Element => {
@@ -28,10 +28,10 @@ export const SwipeButtons = ({
         <CrossIcon className="fill-current" width='16px' height='16px' />
       </button>
       <button
-        onClick={isSongPlaying ? onPressPlay : onPressPause}
+        onClick={toggle}
         className='p-1 rounded transition-all text-purple-strong hover:bg-purple-strong hover:text-white'
       >
-        {isSongPlaying
+        {isPlaying
           ? <PauseIcon width='24px' height='24px' />
           : <PlayIcon width='24px' height='24px' />
         }

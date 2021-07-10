@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/promise-function-async */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 
 import React, { useEffect, useState } from 'react'
@@ -7,12 +8,12 @@ import * as RA from 'fp-ts/ReadonlyArray'
 import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
-import * as Eq from 'fp-ts/Eq'
+import TinderCard from 'react-tinder-card'
 import { ADT, matchI } from 'ts-adt'
 import { render } from 'react-dom'
 import { SongCard } from './components/SongCard'
+import { Card } from './components/Card'
 import { Container } from './components/Container'
-import { Deck } from './components/Deck'
 import { LoadingIndicator } from './components/LoadingIndicator'
 import { ReactComponent as CrossIcon } from './assets/cross.svg'
 import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
@@ -34,15 +35,17 @@ export type SwipeDirection
   | 'RIGHT'
 
 interface HomeProps {
+  isPlaying: boolean
   playSong: (song: Song) => IO.IO<void>
   resume: IO.IO<void>
   pause: IO.IO<void>
   toggle: IO.IO<void>
 }
 
-const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
+const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
+  const [swipedSongs, setSwipedSongs] = useState<readonly Song[]>([])
   const [preference, setPreference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
@@ -58,25 +61,40 @@ const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
     }))
   )
 
+  const refresh = (): Promise<void> => loadSongs().then(E.fold(console.error, setSongs))
+
   useEffect(() => {
     F.pipe(songs, RA.head, O.fold(F.constant(ioVoid), playSong))()
+    console.log('songs updated!')
 
     if (songs.length <= 0 && O.isSome(user)) {
-      loadSongs().then(E.fold(console.error, setSongs))
+      refresh()
     }
   }, [user, songs])
 
-  useEffect(() => {
-    loadSongs().then(E.fold(console.error, setSongs))
-  }, [preference])
+  useEffect(() => { refresh() }, [preference])
 
   useEffect(() => {
     handleFetchUser().then(E.fold(console.error, F.flow(O.some, setUser)))
   }, [])
 
+  const swipeLeft: IO.IO<void> = () => {
+    setSongs(RA.dropLeft(1))
+  }
+
+  const swipeRight = (song: Song): IO.IO<void> => () => {
+    setSongs(RA.dropLeft(1))
+    setSwipedSongs(RA.append(song))
+  }
+
   return (
-    <div>
-      <div>
+    <div className='p-4'>
+      <header className='flex'>
+        <div>
+          <h1 className='font-bold text-3xl italic p-4 bg-white'>
+            SPOTISWYPE
+          </h1>
+        </div>
         {F.pipe(
           user,
           O.fold(
@@ -84,25 +102,31 @@ const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
             (user) => <div className='font-bold text-2xl'>{user.name}</div>
           )
         )}
+      </header>
+
+      <div className='my-8' />
+
+      <div className='flex justify-center'>
+        {F.pipe(
+          songs,
+          RA.reverse,
+          RA.map((song) => (
+            <div className='absolute'>
+              <TinderCard
+                key={song.id}
+                onSwipe={(dir) => dir === 'left' ? swipeLeft() : swipeRight(song)()}
+                onCardLeftScreen={F.constVoid}
+              >
+                <Card song={song} />
+              </TinderCard>
+            </div>
+          ))
+        )}
       </div>
 
       <div className='my-8' />
 
-      {F.pipe(
-        songs,
-        RA.map((song) => (
-          <div
-            key={song.id}
-            onClick={() => setSongs(RA.filter((_song) => _song !== song))}
-          >
-            {song.name}
-          </div>
-        ))
-      )}
-
-      <div className='my-8' />
-
-      <div>
+      <div className='flex flex-col space-y-2'>
         {F.pipe(
           user,
           O.map(getPlaylistsFromUser),
@@ -116,13 +140,34 @@ const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
           )
         )}
       </div>
-      <button onClick={handleLogin}>
-        Log-in
-      </button>
 
-      <button onClick={toggle}>
-        Play
-      </button>
+      <div className='my-8' />
+
+      <div className='flex flex-row space-x-4'>
+        <button onClick={handleLogin}>
+          Log-in
+        </button>
+
+        <SwipeButtons
+          isPlaying={isPlaying}
+          toggle={toggle}
+          onSwipeLeft={swipeLeft}
+          onSwipeRight={() => swipeRight(songs[0])}
+        />
+      </div>
+
+      <div className='my-8' />
+
+      <div>
+        {F.pipe(
+          swipedSongs,
+          RA.map(({ id, name }) => (
+            <div key={id}>
+              {name}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
@@ -157,6 +202,7 @@ const AudioManager = (): JSX.Element => {
   return (
     <>
       <Home
+        isPlaying={isPlaying}
         playSong={(song) => () => setCurrentSong(O.some(song))}
         resume={() => setIsPlaying(true)}
         pause={() => setIsPlaying(false)}

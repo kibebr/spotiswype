@@ -8,8 +8,5 @@ module.exports = {
     project: './tsconfig.json'
   },
   rules: {
-    '@typescript-eslint/explicit-function-return-type': ['error', {
-      allowHigherOrderFunctions: true
-    }]
   }
 }

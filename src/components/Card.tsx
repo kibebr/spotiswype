@@ -5,18 +5,14 @@ import { ReactComponent as Mark } from '../assets/mark.svg'
 import { ReactComponent as Play } from '../assets/play-fill.svg'
 
 interface CardProps {
-  style: React.CSSProperties
-  id: string
   song: Song
 }
 
-export const Card = ({ id, song, style }: CardProps): JSX.Element => {
+export const Card = ({ song }: CardProps): JSX.Element => {
   return (
     <div
-      id={id}
-      className='absolute cursor-grab flex-shrink-0 w-9/12 max-w-xs p-5 bg-center bg-cover h-5/6 bg-purple-strong card transition-transform md:w-6/12 rounded-3xl shadow-2xl'
+      className='cursor-grab relative w-96 h-96'
       style={{
-        ...style,
         backgroundImage: `url(${song.imageUrl})`,
         boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px'
       }}
