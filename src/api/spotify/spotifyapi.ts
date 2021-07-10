@@ -43,7 +43,7 @@ export const getRecommendedFromPlaylist = (playlist: Playlist): RTE.ReaderTaskEi
   randomElements(5),
   RA.map(flow(getArtistFromSong, prop('id'))),
   (ids) => curried([])(ids)([])(token),
-  TE.chainEitherKW(flow(prop('tracks'), spotifyTracksToSongs))
+  TE.map(flow(prop('tracks'), RA.map(trackToSong), RA.rights))
 )
 
 const mergeSpotifyPlaylistAndTracks = (sp: SpotifyPlaylist, trs: readonly SpotifyTrack[]): SpotifyPlaylistWithTracks => ({

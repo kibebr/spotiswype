@@ -8,3 +8,4 @@ export interface User {
 }
 
 export const getTokenFromUser = ({ token }: User): string => token
+export const getPlaylistsFromUser = ({ playlists }: User): readonly Playlist[] => playlists

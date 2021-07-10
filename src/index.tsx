@@ -23,7 +23,7 @@ import { handleLogin, handleFetchUser } from './api/spotify/login'
 import { createSwipeable } from './swipehandler'
 import { usePalette } from 'react-palette'
 import { Playlist } from './domain/Playlist'
-import { User, getTokenFromUser } from './domain/User'
+import { User, getTokenFromUser, getPlaylistsFromUser } from './domain/User'
 import { Song } from './domain/Song'
 import './index.css'
 
@@ -43,7 +43,7 @@ interface HomeProps {
 const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
-  const [preference] = useState<ADT<{
+  const [preference, setPreference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
   }>>({ _type: 'Liked' })
@@ -67,18 +67,26 @@ const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
   }, [user, songs])
 
   useEffect(() => {
+    loadSongs().then(E.fold(console.error, setSongs))
+  }, [preference])
+
+  useEffect(() => {
     handleFetchUser().then(E.fold(console.error, F.flow(O.some, setUser)))
   }, [])
 
   return (
     <div>
-      {F.pipe(
-        user,
-        O.fold(
-          () => <>No user logged in.</>,
-          (user) => <div>{user.name}</div>
-        )
-      )}
+      <div>
+        {F.pipe(
+          user,
+          O.fold(
+            () => <>No user logged in.</>,
+            (user) => <div className='font-bold text-2xl'>{user.name}</div>
+          )
+        )}
+      </div>
+
+      <div className='my-8' />
 
       {F.pipe(
         songs,
@@ -92,6 +100,22 @@ const Home = ({ playSong, toggle }: HomeProps): JSX.Element => {
         ))
       )}
 
+      <div className='my-8' />
+
+      <div>
+        {F.pipe(
+          user,
+          O.map(getPlaylistsFromUser),
+          O.foldW(
+            () => <></>,
+            RA.map((playlist) => (
+              <button onClick={() => setPreference({ _type: 'Playlist', playlist })}>
+                {playlist.name}
+              </button>
+            ))
+          )
+        )}
+      </div>
       <button onClick={handleLogin}>
         Log-in
       </button>
