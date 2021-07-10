@@ -6,3 +6,5 @@ export interface User {
   name: string
   playlists: readonly Playlist[]
 }
+
+export const getTokenFromUser = ({ token }: User): string => token

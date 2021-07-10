@@ -20,7 +20,7 @@ import {
   SpotifyPlaylist,
   SpotifyPlaylistWithTracks
 } from './types'
-import { spotifyTracksToSongs, createUserFromAPI } from './mappers'
+import { spotifyTracksToSongs, createUserFromAPI, trackToSong } from './mappers'
 import { Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
 import { unsafeHead, randomElements } from '../../utils/array'
@@ -83,5 +83,5 @@ export const getRecommendedFromLikedSongs: RTE.ReaderTaskEither<string, string |
     flow(getRandomArtists, RA.map(prop('id')))
   )),
   RTE.chain((artists) => curried([])(artists)([])),
-  RTE.chainEitherKW(flow(prop('tracks'), spotifyTracksToSongs))
+  RTE.map(flow(prop('tracks'), RA.map(trackToSong), RA.rights))
 )

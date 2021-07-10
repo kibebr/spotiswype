@@ -20,7 +20,7 @@ const newSpotifyRequest = ({ type, params }: Settings): ReaderTaskEither<Spotify
     headers: {
       Authorization: `Bearer ${accessToken}`
     }
-  }),
+  }).then((res) => res.json()),
   toError
 )
 
