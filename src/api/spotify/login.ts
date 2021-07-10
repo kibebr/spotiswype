@@ -1,5 +1,5 @@
-import { chain, fromOption, TaskEither } from 'fp-ts/TaskEither'
-import { IO } from 'fp-ts/IO'
+import * as IO from 'fp-ts/IO'
+import * as TE from 'fp-ts/TaskEither'
 import { User } from '../../domain/User'
 import { fromString, getParam } from 'fp-ts-std/URLSearchParams'
 import { pipe, flow, constant } from 'fp-ts/function'
@@ -17,18 +17,14 @@ const spotifyCallbackUrl: string = pipe(
   append(`&redirect_uri=${encodeURIComponent(process.env.REACT_APP_REDIRECT_URI as string)}`)
 )
 
-const getWindowHash: IO<string> = () => window.location.hash.split('#')[1]
+const getWindowHash: IO.IO<string> = () => window.location.hash.split('#')[1]
 
-export const handleFetchUser: () => TaskEither<Error | Errors, User> = flow(
+export const handleFetchUser: TE.TaskEither<Error | Errors, User> = pipe(
   getWindowHash,
-  fromString,
-  getParam('access_token'),
-  fromOption(pipe(
-    'No access token.',
-    Error,
-    constant
-  )),
-  chain(getUser)
+  IO.map(flow(fromString, getParam('access_token'))),
+  TE.fromIO,
+  TE.chain(TE.fromOption(pipe('No access token.', Error, constant))),
+  TE.chainW(getUser)
 )
 
-export const handleLogin: IO<void> = () => { window.location.href = spotifyCallbackUrl }
+export const handleLogin: IO.IO<void> = () => { window.location.href = spotifyCallbackUrl }
