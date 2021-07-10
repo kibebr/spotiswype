@@ -11,20 +11,14 @@ import * as F from 'fp-ts/function'
 import TinderCard from 'react-tinder-card'
 import { ADT, matchI } from 'ts-adt'
 import { render } from 'react-dom'
-import { SongCard } from './components/SongCard'
 import { Card } from './components/Card'
-import { Container } from './components/Container'
-import { LoadingIndicator } from './components/LoadingIndicator'
-import { ReactComponent as CrossIcon } from './assets/cross.svg'
-import { ReactComponent as SpotifyIcon } from './assets/spotify.svg'
+import { prop } from 'fp-ts-ramda'
 import { SwipeButtons } from './components/SwipeButtons'
 import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/spotify/spotifyapi'
-import { dropRight } from 'fp-ts/Array'
 import { handleLogin, handleFetchUser } from './api/spotify/login'
-import { createSwipeable } from './swipehandler'
-import { usePalette } from 'react-palette'
 import { Playlist } from './domain/Playlist'
 import { User, getTokenFromUser, getPlaylistsFromUser } from './domain/User'
+import { usePalette } from 'react-palette'
 import { Song } from './domain/Song'
 import './index.css'
 
@@ -42,6 +36,25 @@ interface HomeProps {
   toggle: IO.IO<void>
 }
 
+const Header = ({ user, handleLogin }: { user: O.Option<User>, handleLogin: IO.IO<void> }): JSX.Element => {
+  return (
+    <header className='flex justify-between opacity-90 items-center'>
+      <div>
+        <h1 className='font-bold text-3xl italic'>
+          spotiswype
+        </h1>
+      </div>
+      {F.pipe(
+        user,
+        O.fold(
+          () => <button onClick={handleLogin}>Log-in.</button>,
+          (user) => <div className='font-bold text-xl'>Logged in as {user.name}</div>
+        )
+      )}
+    </header>
+  )
+}
+
 const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
@@ -50,6 +63,7 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
     Liked: {}
     Playlist: { playlist: Playlist }
   }>>({ _type: 'Liked' })
+  const { data } = usePalette(F.pipe(songs, RA.head, O.map(prop('imageUrl')), O.getOrElse(F.constant(''))))
 
   const loadSongs = F.pipe(
     user,
@@ -63,9 +77,17 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
 
   const refresh = (): Promise<void> => loadSongs().then(E.fold(console.error, setSongs))
 
+  const swipeLeft: IO.IO<void> = () => {
+    setSongs(RA.dropLeft(1))
+  }
+
+  const swipeRight = (song: Song): IO.IO<void> => () => {
+    setSongs(RA.dropLeft(1))
+    setSwipedSongs(RA.append(song))
+  }
+
   useEffect(() => {
     F.pipe(songs, RA.head, O.fold(F.constant(ioVoid), playSong))()
-    console.log('songs updated!')
 
     if (songs.length <= 0 && O.isSome(user)) {
       refresh()
@@ -78,31 +100,12 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
     handleFetchUser().then(E.fold(console.error, F.flow(O.some, setUser)))
   }, [])
 
-  const swipeLeft: IO.IO<void> = () => {
-    setSongs(RA.dropLeft(1))
-  }
-
-  const swipeRight = (song: Song): IO.IO<void> => () => {
-    setSongs(RA.dropLeft(1))
-    setSwipedSongs(RA.append(song))
-  }
-
   return (
-    <div className='p-4'>
-      <header className='flex'>
-        <div>
-          <h1 className='font-bold text-3xl italic p-4 bg-white'>
-            SPOTISWYPE
-          </h1>
-        </div>
-        {F.pipe(
-          user,
-          O.fold(
-            () => <>No user logged in.</>,
-            (user) => <div className='font-bold text-2xl'>{user.name}</div>
-          )
-        )}
-      </header>
+    <div className='p-4 h-full transition-colors' style={{ backgroundColor: data?.vibrant }}>
+      <Header
+        user={user}
+        handleLogin={handleLogin}
+      />
 
       <div className='my-8' />
 
@@ -122,6 +125,13 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
             </div>
           ))
         )}
+
+        <SwipeButtons
+          isPlaying={isPlaying}
+          toggle={toggle}
+          onSwipeLeft={swipeLeft}
+          onSwipeRight={swipeRight(songs[0])}
+        />
       </div>
 
       <div className='my-8' />
@@ -142,19 +152,6 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
       </div>
 
       <div className='my-8' />
-
-      <div className='flex flex-row space-x-4'>
-        <button onClick={handleLogin}>
-          Log-in
-        </button>
-
-        <SwipeButtons
-          isPlaying={isPlaying}
-          toggle={toggle}
-          onSwipeLeft={swipeLeft}
-          onSwipeRight={() => swipeRight(songs[0])}
-        />
-      </div>
 
       <div className='my-8' />
 

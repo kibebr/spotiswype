@@ -11,13 +11,12 @@ interface CardProps {
 export const Card = ({ song }: CardProps): JSX.Element => {
   return (
     <div
-      className='cursor-grab relative w-96 h-96'
+      className='cursor-grab w-96 h-96'
       style={{
-        backgroundImage: `url(${song.imageUrl})`,
-        boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px'
+        backgroundImage: `url(${song.imageUrl})`
       }}
     >
-      <div className='flex flex-col justify-between h-auto'>
+      <div className='flex flex-col justify-between'>
         <div className='p-3 text-center text-black rounded-lg bg-blur'>
           {song.name} <span className='text-gray-700'>by {song.author.name}</span>
         </div>
