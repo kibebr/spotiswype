@@ -8,7 +8,9 @@ import * as RA from 'fp-ts/ReadonlyArray'
 import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
+import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
 import TinderCard from 'react-tinder-card'
+import { PathReporter } from 'io-ts/PathReporter'
 import { ADT, matchI } from 'ts-adt'
 import { render } from 'react-dom'
 import { Card } from './components/Card'
@@ -58,7 +60,7 @@ const Header = ({ user, handleLogin }: { user: O.Option<User>, handleLogin: IO.I
 const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
-  const [swipedSongs, setSwipedSongs] = useState<readonly Song[]>([])
+  const [swipedSongs, setSwipedSongs] = useState<readonly Song[]>(F.pipe(getCachedLikedSongs(), E.getOrElseW(() => [])))
   const [preference, setPreference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
@@ -93,6 +95,10 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
       refresh()
     }
   }, [user, songs])
+
+  useEffect(() => {
+    setCachedLikedSongs(swipedSongs)()
+  }, [swipedSongs])
 
   useEffect(() => { refresh() }, [preference])
 

@@ -1,10 +1,15 @@
-import { Author } from './Author'
+import { AuthorV } from './Author'
+import * as t from 'io-ts'
 
-export interface Song {
-  id: string
-  name: string
-  author: Author
-  audio: string
-  imageUrl: string
-  link: string
-}
+export const SongV = t.type({
+  id: t.string,
+  name: t.string,
+  author: AuthorV,
+  audio: t.string,
+  imageUrl: t.string,
+  link: t.string
+})
+
+export const SongVArray = t.readonlyArray(SongV)
+
+export type Song = t.TypeOf<typeof SongV>
