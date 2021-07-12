@@ -79,3 +79,9 @@ export type SavedTracksResponse = TypeOf<typeof GetSavedTracksResponseV>
 export type SeveralArtistsResponse = TypeOf<typeof GetSeveralArtistsResponseV>
 export type RecommendationsResponse = TypeOf<typeof GetRecommendationsResponseV>
 export type SpotifyPlaylistWithTracks = SpotifyPlaylist & { tracks: readonly SpotifyTrack[] }
+
+export interface SpotifySeeds {
+  readonly artistsIds: readonly string[]
+  readonly tracksIds: readonly string[]
+  readonly genres: readonly string[]
+}

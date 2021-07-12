@@ -8,11 +8,11 @@ import * as RA from 'fp-ts/ReadonlyArray'
 import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
-import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
 import TinderCard from 'react-tinder-card'
-import { PathReporter } from 'io-ts/PathReporter'
+import { Seeds } from './domain/Seeds'
+import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
+import { ReactComponent as PersonIcon } from './assets/person.svg'
 import { ADT, matchI } from 'ts-adt'
-import { render } from 'react-dom'
 import { Card } from './components/Card'
 import { prop } from 'fp-ts-ramda'
 import { SwipeButtons } from './components/SwipeButtons'
@@ -22,6 +22,7 @@ import { Playlist } from './domain/Playlist'
 import { User, getTokenFromUser, getPlaylistsFromUser } from './domain/User'
 import { usePalette } from 'react-palette'
 import { Song } from './domain/Song'
+import { render } from 'react-dom'
 import './index.css'
 
 const ioVoid: IO.IO<void> = () => {}
@@ -29,14 +30,6 @@ const ioVoid: IO.IO<void> = () => {}
 export type SwipeDirection
   = 'LEFT'
   | 'RIGHT'
-
-interface HomeProps {
-  isPlaying: boolean
-  playSong: (song: Song) => IO.IO<void>
-  resume: IO.IO<void>
-  pause: IO.IO<void>
-  toggle: IO.IO<void>
-}
 
 const Header = ({ user, handleLogin }: { user: O.Option<User>, handleLogin: IO.IO<void> }): JSX.Element => {
   return (
@@ -46,21 +39,45 @@ const Header = ({ user, handleLogin }: { user: O.Option<User>, handleLogin: IO.I
           spotiswype
         </h1>
       </div>
-      {F.pipe(
-        user,
-        O.fold(
-          () => <button onClick={handleLogin}>Log-in.</button>,
-          (user) => <div className='font-bold text-xl'>Logged in as {user.name}</div>
-        )
-      )}
+
+      <div>
+        {F.pipe(
+          user,
+          O.fold(
+            () => <button onClick={handleLogin}>Log-in.</button>,
+            (user) => (
+              <div>
+                <button className='bg-blur rounded-full p-2'>
+                  <PersonIcon className='w-6 h-6 fill-current' />
+                </button>
+              </div>
+            )
+          )
+        )}
+      </div>
     </header>
   )
+}
+
+interface HomeProps {
+  isPlaying: boolean
+  playSong: (song: Song) => IO.IO<void>
+  resume: IO.IO<void>
+  pause: IO.IO<void>
+  toggle: IO.IO<void>
+}
+
+const defaultSeeds: Seeds = {
+  artists: [],
+  songs: [],
+  genres: []
 }
 
 const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
   const [songs, setSongs] = useState<readonly Song[]>([])
   const [swipedSongs, setSwipedSongs] = useState<readonly Song[]>(F.pipe(getCachedLikedSongs(), E.getOrElseW(() => [])))
+  const [seeds, setSeeds] = useState<Seeds>(defaultSeeds)
   const [preference, setPreference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
@@ -97,6 +114,12 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   }, [user, songs])
 
   useEffect(() => {
+    if (O.isSome(user)) {
+      console.log(user.value.playlists)
+    }
+  }, [user])
+
+  useEffect(() => {
     setCachedLikedSongs(swipedSongs)()
   }, [swipedSongs])
 
@@ -125,6 +148,7 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
                 key={song.id}
                 onSwipe={(dir) => dir === 'left' ? swipeLeft() : swipeRight(song)()}
                 onCardLeftScreen={F.constVoid}
+                preventSwipe={['up', 'down']}
               >
                 <Card song={song} />
               </TinderCard>
@@ -132,33 +156,14 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
           ))
         )}
 
+      </div>
+
         <SwipeButtons
           isPlaying={isPlaying}
           toggle={toggle}
           onSwipeLeft={swipeLeft}
           onSwipeRight={swipeRight(songs[0])}
         />
-      </div>
-
-      <div className='my-8' />
-
-      <div className='flex flex-col space-y-2'>
-        {F.pipe(
-          user,
-          O.map(getPlaylistsFromUser),
-          O.foldW(
-            () => <></>,
-            RA.map((playlist) => (
-              <button onClick={() => setPreference({ _type: 'Playlist', playlist })}>
-                {playlist.name}
-              </button>
-            ))
-          )
-        )}
-      </div>
-
-      <div className='my-8' />
-
       <div className='my-8' />
 
       <div>

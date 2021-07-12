@@ -1,11 +1,11 @@
 import * as RA from 'fp-ts/ReadonlyArray'
 import * as RTE from 'fp-ts/ReaderTaskEither'
 import * as TE from 'fp-ts/TaskEither'
-import { fromNullable, Option } from 'fp-ts/Option'
 import { pipe, flow } from 'fp-ts/function'
-import { Song } from '../../domain/Song'
-import { Author } from '../../domain/Author'
+import { Seeds } from '../../domain/Seeds'
+import { Song, getArtistFromSong } from '../../domain/Song'
 import { Playlist } from '../../domain/Playlist'
+import { mergeSpotifyPlaylistAndTracks, getRandomArtistsFromTrack, seedsToSpotifySeeds } from './utils'
 import {
   tryGetSavedTracks,
   tryGetPlaylists,
@@ -14,28 +14,15 @@ import {
   tryGetRecommendedSongs
 } from './getters'
 import {
-  SpotifyArtist,
-  SpotifyAlbum,
-  SpotifyTrack,
-  SpotifyPlaylist,
   SpotifyPlaylistWithTracks
 } from './types'
-import { spotifyTracksToSongs, createUserFromAPI, trackToSong } from './mappers'
+import { createUserFromAPI, trackToSong } from './mappers'
 import { Errors } from 'io-ts'
 import { prop } from 'fp-ts-ramda'
-import { unsafeHead, randomElements } from '../../utils/array'
+import { randomElements } from '../../utils/array'
 import { curry4T } from 'fp-ts-std/Function'
 
 const curried = curry4T(tryGetRecommendedSongs)
-
-export const getImageFromAlbum: (a: SpotifyAlbum) => string = flow(prop('images'), (images) => images[1].url)
-
-export const getImageFromSpotifyPlaylist: (p: SpotifyPlaylist) => Option<string> = flow(
-  prop('images'),
-  RA.findFirstMap(flow(prop('url'), fromNullable))
-)
-
-export const getArtistFromSong = (song: Song): Author => song.author
 
 export const getRecommendedFromPlaylist = (playlist: Playlist): RTE.ReaderTaskEither<string, string | Error | Errors, readonly Song[]> => (token) => pipe(
   playlist,
@@ -45,11 +32,6 @@ export const getRecommendedFromPlaylist = (playlist: Playlist): RTE.ReaderTaskEi
   (ids) => curried([])(ids)([])(token),
   TE.map(flow(prop('tracks'), RA.map(trackToSong), RA.rights))
 )
-
-const mergeSpotifyPlaylistAndTracks = (sp: SpotifyPlaylist, trs: readonly SpotifyTrack[]): SpotifyPlaylistWithTracks => ({
-  ...sp,
-  tracks: trs
-})
 
 export const getUserPlaylistsWithTracks: RTE.ReaderTaskEither<string, Error | Errors, readonly SpotifyPlaylistWithTracks[]> = pipe(
   tryGetPlaylists,
@@ -70,18 +52,19 @@ export const getUser = pipe(
   RTE.chainW(RTE.rightReader)
 )
 
-const getRandomArtists: (tracks: readonly SpotifyTrack[]) => readonly SpotifyArtist[] = flow(
-  RA.map(flow(prop('artists'), unsafeHead)),
-  randomElements(5)
-)
-
 export const getRecommendedFromLikedSongs: RTE.ReaderTaskEither<string, string | Error | Errors, readonly Song[]> = pipe(
   tryGetSavedTracks,
   RTE.map(flow(
     prop('items'),
     RA.map(prop('track')),
-    flow(getRandomArtists, RA.map(prop('id')))
+    flow(getRandomArtistsFromTrack, RA.map(prop('id')))
   )),
   RTE.chain((artists) => curried([])(artists)([])),
+  RTE.map(flow(prop('tracks'), RA.map(trackToSong), RA.rights))
+)
+
+export const getRecommendedFromSeeds: (seeds: Seeds) => RTE.ReaderTaskEither<string, string | Error | Errors, readonly Song[]> = flow(
+  seedsToSpotifySeeds,
+  ({ artistsIds, tracksIds, genres }) => curried(tracksIds)(artistsIds)(genres),
   RTE.map(flow(prop('tracks'), RA.map(trackToSong), RA.rights))
 )

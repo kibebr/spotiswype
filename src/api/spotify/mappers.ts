@@ -11,7 +11,7 @@ import { Author } from '../../domain/Author'
 import { Playlist } from '../../domain/Playlist'
 import { prop } from 'fp-ts-ramda'
 import { GetProfileResponse, SpotifyTrack, SpotifyPlaylistWithTracks, SpotifyArtist } from './types'
-import { getImageFromAlbum, getImageFromSpotifyPlaylist } from './spotifyapi'
+import { getImageFromAlbum, getImageFromSpotifyPlaylist } from './utils'
 
 export const spotifyArtistToAuthor = ({ id, name }: SpotifyArtist): Author => ({
   id,
