@@ -7,12 +7,12 @@ import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
 
-type UseUserReturn = [O.Option<User>]
+type UseUser = O.Option<User>
 type UseUserProps = {
   handleAPIError: (error: Error) => void
 }
 
-export const useUser = ({ handleAPIError }: UseUserProps): UseUserReturn => {
+export const useUser = ({ handleAPIError }: UseUserProps): UseUser => {
   const [user, setUser] = useState<O.Option<User>>(O.none)
 
   useEffect(() => {
@@ -22,5 +22,5 @@ export const useUser = ({ handleAPIError }: UseUserProps): UseUserReturn => {
     ))
   }, [])
 
-  return [user]
+  return user
 }

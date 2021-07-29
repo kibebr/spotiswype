@@ -14,21 +14,18 @@ import { useSongs } from './hooks/useSongs'
 import { useSwipedSongs } from './hooks/useSwipedSongs'
 import { useBackgroundColor } from './hooks/useBackgroundColor'
 import { useSeeds } from './hooks/useSeeds'
-import { Seeds } from './domain/Seeds'
-import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
 import { ReactComponent as PersonIcon } from './assets/person.svg'
 import { ADT, matchI } from 'ts-adt'
 import { Card } from './components/Card'
-import { prop } from 'fp-ts-ramda'
 import { SwipeButtons } from './components/SwipeButtons'
 import { getRecommendedFromPlaylist, getRecommendedFromLikedSongs } from './api/spotify/spotifyapi'
-import { handleLogin, handleFetchUser } from './api/spotify/login'
+import { handleLogin } from './api/spotify/login'
 import { Playlist } from './domain/Playlist'
-import { User, getTokenFromUser, getPlaylistsFromUser } from './domain/User'
-import { usePalette } from 'react-palette'
+import { User, getTokenFromUser } from './domain/User'
 import { Song } from './domain/Song'
 import { render } from 'react-dom'
 import './index.css'
+import { useAudio } from './hooks/useAudio'
 
 const ioVoid: IO.IO<void> = () => {}
 
@@ -64,16 +61,8 @@ const Header = ({ user, handleLogin }: { user: O.Option<User>, handleLogin: IO.I
   )
 }
 
-interface HomeProps {
-  isPlaying: boolean
-  playSong: (song: Song) => IO.IO<void>
-  resume: IO.IO<void>
-  pause: IO.IO<void>
-  toggle: IO.IO<void>
-}
-
-const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
-  const [user] = useUser({ handleAPIError: () => {} })
+const Home = (): JSX.Element => {
+  const user = useUser({ handleAPIError: () => {} })
   const [songs, { addSongs, removeLast, removeSong }] = useSongs()
   const [swipedSongs, { addSongToSwiped }] = useSwipedSongs()
   const [seeds] = useSeeds()
@@ -82,6 +71,7 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
     Playlist: { playlist: Playlist }
   }>>({ _type: 'Liked' })
   const { color } = useBackgroundColor({ songs })
+  const { isPlaying, playSong, toggle } = useAudio()
 
   const loadSongs = F.pipe(
     user,
@@ -165,44 +155,4 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   )
 }
 
-const AudioManager = (): JSX.Element => {
-  const [currentSong, setCurrentSong] = useState<O.Option<Song>>(O.none)
-  const [audio, setAudio] = useState<O.Option<HTMLAudioElement>>(O.none)
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
-
-  useEffect(() => {
-    if (O.isSome(audio)) {
-      audio.value.addEventListener('ended', () => setIsPlaying(false))
-    }
-  }, [audio])
-
-  useEffect(() => {
-    if (O.isSome(audio)) {
-      isPlaying ? audio.value.play() : audio.value.pause()
-    }
-  }, [isPlaying, audio])
-
-  useEffect(() => {
-    if (O.isSome(audio)) {
-      audio.value.pause()
-    }
-
-    if (O.isSome(currentSong)) {
-      setAudio(O.some(new Audio(currentSong.value.audio)))
-    }
-  }, [currentSong])
-
-  return (
-    <>
-      <Home
-        isPlaying={isPlaying}
-        playSong={(song) => () => setCurrentSong(O.some(song))}
-        resume={() => setIsPlaying(true)}
-        pause={() => setIsPlaying(false)}
-        toggle={() => setIsPlaying(!isPlaying)}
-      />
-    </>
-  )
-}
-
-render(<AudioManager />, document.getElementById('root'))
+render(<Home />, document.getElementById('root'))
