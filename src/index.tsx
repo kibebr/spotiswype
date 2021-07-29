@@ -13,6 +13,7 @@ import { useUser } from './hooks/useUser'
 import { useSongs } from './hooks/useSongs'
 import { useSwipedSongs } from './hooks/useSwipedSongs'
 import { useBackgroundColor } from './hooks/useBackgroundColor'
+import { useSeeds } from './hooks/useSeeds'
 import { Seeds } from './domain/Seeds'
 import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
 import { ReactComponent as PersonIcon } from './assets/person.svg'
@@ -71,16 +72,11 @@ interface HomeProps {
   toggle: IO.IO<void>
 }
 
-const defaultSeeds: Seeds = {
-  artists: [],
-  songs: [],
-  genres: []
-}
-
 const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
   const [user] = useUser({ handleAPIError: () => {} })
   const [songs, { addSongs, removeLast, removeSong }] = useSongs()
   const [swipedSongs, { addSongToSwiped }] = useSwipedSongs()
+  const [seeds] = useSeeds()
   const [preference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
