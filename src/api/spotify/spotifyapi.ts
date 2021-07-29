@@ -4,7 +4,7 @@ import * as TE from 'fp-ts/TaskEither'
 import { pipe, flow } from 'fp-ts/function'
 import { Seeds } from '../../domain/Seeds'
 import { Song, getArtistFromSong } from '../../domain/Song'
-import { Playlist } from '../../domain/Playlist'
+import { Playlist, getSongsFromPlaylist } from '../../domain/Playlist'
 import { mergeSpotifyPlaylistAndTracks, getRandomArtistsFromTrack, seedsToSpotifySeeds } from './utils'
 import {
   tryGetSavedTracks,

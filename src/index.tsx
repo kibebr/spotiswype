@@ -9,6 +9,10 @@ import * as O from 'fp-ts/Option'
 import * as E from 'fp-ts/Either'
 import * as F from 'fp-ts/function'
 import TinderCard from 'react-tinder-card'
+import { useUser } from './hooks/useUser'
+import { useSongs } from './hooks/useSongs'
+import { useSwipedSongs } from './hooks/useSwipedSongs'
+import { useBackgroundColor } from './hooks/useBackgroundColor'
 import { Seeds } from './domain/Seeds'
 import { getCachedLikedSongs, setCachedLikedSongs } from './services/likedSongs'
 import { ReactComponent as PersonIcon } from './assets/person.svg'
@@ -74,15 +78,14 @@ const defaultSeeds: Seeds = {
 }
 
 const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
-  const [user, setUser] = useState<O.Option<User>>(O.none)
-  const [songs, setSongs] = useState<readonly Song[]>([])
-  const [swipedSongs, setSwipedSongs] = useState<readonly Song[]>(F.pipe(getCachedLikedSongs(), E.getOrElseW(() => [])))
-  const [seeds, setSeeds] = useState<Seeds>(defaultSeeds)
-  const [preference, setPreference] = useState<ADT<{
+  const [user] = useUser({ handleAPIError: () => {} })
+  const [songs, { addSongs, removeLast, removeSong }] = useSongs()
+  const [swipedSongs, { addSongToSwiped }] = useSwipedSongs()
+  const [preference] = useState<ADT<{
     Liked: {}
     Playlist: { playlist: Playlist }
   }>>({ _type: 'Liked' })
-  const { data } = usePalette(F.pipe(songs, RA.head, O.map(prop('imageUrl')), O.getOrElse(F.constant(''))))
+  const { color } = useBackgroundColor({ songs })
 
   const loadSongs = F.pipe(
     user,
@@ -94,15 +97,15 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
     }))
   )
 
-  const refresh = (): Promise<void> => loadSongs().then(E.fold(console.error, setSongs))
+  const refresh = (): Promise<void> => loadSongs().then(E.fold(console.error, addSongs))
 
   const swipeLeft: IO.IO<void> = () => {
-    setSongs(RA.dropLeft(1))
+    removeLast()
   }
 
   const swipeRight = (song: Song): IO.IO<void> => () => {
-    setSongs(RA.dropLeft(1))
-    setSwipedSongs(RA.append(song))
+    removeSong(song)
+    addSongToSwiped(song)
   }
 
   useEffect(() => {
@@ -113,24 +116,10 @@ const Home = ({ isPlaying, playSong, toggle }: HomeProps): JSX.Element => {
     }
   }, [user, songs])
 
-  useEffect(() => {
-    if (O.isSome(user)) {
-      console.log(user.value.playlists)
-    }
-  }, [user])
-
-  useEffect(() => {
-    setCachedLikedSongs(swipedSongs)()
-  }, [swipedSongs])
-
   useEffect(() => { refresh() }, [preference])
 
-  useEffect(() => {
-    handleFetchUser().then(E.fold(console.error, F.flow(O.some, setUser)))
-  }, [])
-
   return (
-    <div className='p-4 h-full transition-colors' style={{ backgroundColor: data?.vibrant }}>
+    <div className='p-4 h-full transition-colors' style={{ backgroundColor: color }}>
       <Header
         user={user}
         handleLogin={handleLogin}

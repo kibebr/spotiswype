@@ -6,3 +6,5 @@ export interface Playlist {
   imageUrl?: string
   songs: readonly Song[]
 }
+
+export const getSongsFromPlaylist = ({ songs }: Playlist): readonly Song[] => songs
